@@ -3,7 +3,7 @@
 (function() {
 
   var YUVBuffer = require('yuv-buffer'),
-    FrameSink = require('./FrameSink.js'),
+    SoftwareFrameSink = require('./SoftwareFrameSink.js'),
     WebGLFrameSink = require('./WebGLFrameSink.js');
 
   if (WebGLFrameSink.isAvailable()) {
@@ -11,32 +11,45 @@
   }
 
   /**
+   * @typedef {Object} YUVCanvasOptions
+   * @property {string} webGL - one of "required", "disabled", or "auto". default "auto"
+   */
+
+  /**
+   * Create a YUVCanvas wrapper attached to an HTML5 canvas element.
+   * This will take over the drawing context of the canvas and may turn
+   * it into a WebGL 3d canvas if possible. Do not attempt to use the
+   * drawing context directly after this.
+   *
+   * If the webGL option is specified as 'required' but WebGL is not
+   * available, will throw an exception.
+   *
    * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
-   * @param {object} options - map of options
+   * @param {YUVCanvasOptions} options - map of options
    */
   function YUVCanvas(canvas, options) {
-    var sink;
-    if (options.forceWebGL) {
-      sink = new WebGLFrameSink(canvas);
-    } else if (options.disableWebGL) {
-      sink = new FrameSink(canvas);
+    var webGL = options.webGL || 'auto';
+    if (webGL === 'disabled') {
+      this._sink = new SoftwareFrameSink(canvas);
+    } else if (webGL === 'required') {
+      this._sink = new WebGLFrameSink(canvas);
     } else if (WebGLFrameSink.isWebGLAvailable()) {
-      sink = new WebGLFrameSink(canvas);
+      this._sink = new WebGLFrameSink(canvas);
     } else {
-      sink = new FrameSink(canvas);
+      this._sink = new SoftwareFrameSink(canvas);
     }
   }
 
   /**
    * Draw a single frame on the canvas.
-   * @param {YUVBuffer} frame - the YUV buffer to draw
+   * @param {YUVBuffer} buffer - the YUV buffer to draw
    */
-  YUVCanvas.prototype.drawFrame = function drawFrame(frame) {
-    this.sink.drawFrame(yCbCrBuffer);
+  YUVCanvas.prototype.drawFrame = function drawFrame(buffer) {
+    this._sink.drawFrame(buffer);
   };
 
   YUVCanvas.prototype.clear = function clear() {
-    this.sink.clear();
+    this._sink.clear();
   };
 
   module.exports = YUVCanvas;
