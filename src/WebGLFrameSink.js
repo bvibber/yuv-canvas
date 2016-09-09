@@ -21,12 +21,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (function() {
 	"use strict";
 
-	var fs = require('fs');
-	var YCBCR_VERTEX_SHADER = fs.readFileSync('./shaders/YCbCr.vsh', 'utf8');
-	var YCBCR_FRAGMENT_SHADER = fs.readFileSync('./shaders/YCbCr.fsh', 'utf8');
-	var YCBCR_STRIPE_FRAGMENT_SHADER = fs.readFileSync('./shaders/YCbCr-stripe.fsh', 'utf8');
-
-	var YUVBuffer = require('yuv-buffer');
+	var shaders = require('../build/shaders.js');
 
 	/**
 	 * Warning: canvas must not have been used for 2d drawing prior!
@@ -148,11 +143,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		}
 
 		function init(buffer) {
-			vertexShader = compileShader(gl.VERTEX_SHADER, YCBCR_VERTEX_SHADER);
+			vertexShader = compileShader(gl.VERTEX_SHADER, shaders.vertex);
 			if (WebGLFrameSink.stripe) {
-				fragmentShader = compileShader(gl.FRAGMENT_SHADER, YCBCR_STRIPE_FRAGMENT_SHADER);
+				fragmentShader = compileShader(gl.FRAGMENT_SHADER, shaders.fragmentStripe);
 			} else {
-				fragmentShader = compileShader(gl.FRAGMENT_SHADER, YCBCR_FRAGMENT_SHADER);
+				fragmentShader = compileShader(gl.FRAGMENT_SHADER, shaders.fragment);
 			}
 
 			program = gl.createProgram();

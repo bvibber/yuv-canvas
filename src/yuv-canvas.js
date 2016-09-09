@@ -25,14 +25,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   var SoftwareFrameSink = require('./SoftwareFrameSink.js'),
     WebGLFrameSink = require('./WebGLFrameSink.js');
 
-  if (WebGLFrameSink.isAvailable()) {
-
-  }
-
   /**
    * @typedef {Object} YUVCanvasOptions
    * @property {boolean} webGL - Whether to use WebGL to draw to the canvas and accelerate color space conversion. If left out, defaults to auto-detect.
-   * @property {}
    */
 
   /**
@@ -45,8 +40,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
    * @param {YUVCanvasOptions} options - map of options
    * @throws exception if WebGL requested but unavailable
+   * @constructor
    */
   function YUVCanvas(canvas, options) {
+    options = options || {};
     var webGL = ('webGL' in options) ? options.webGL : WebGLFrameSink.isAvailable();
     if (webGL) {
       this._sink = new WebGLFrameSink(canvas, options);
@@ -58,6 +55,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   /**
    * Draw a single frame on the canvas.
    * @param {YUVBuffer} buffer - the YUV buffer to draw
+   * @see {@link https://www.npmjs.com/package/yuv-buffer|yuv-buffer} for format
    */
   YUVCanvas.prototype.drawFrame = function drawFrame(buffer) {
     this._sink.drawFrame(buffer);
@@ -71,4 +69,4 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   };
 
   module.exports = YUVCanvas;
-});
+})();
