@@ -28,20 +28,17 @@ module.exports = function(grunt) {
       }
     },
     browserify: {
-      /*
       dist: {
         files: {
-          'build/yuv-canvas.js': ['src/yuv-canvas.js'],
+          'standalone/yuv-canvas.js': ['src/yuv-canvas.js'],
         },
         options: {
-          transform: [require('brfs')],
           standalone: 'YUVCanvas'
         }
       },
-      */
       demo: {
         files: {
-          'build/demo.js': ['src/demo.js']
+          'demo/demo.js': ['src/demo.js']
         },
         options: {
           transform: [[require('aliasify'), {
@@ -55,7 +52,7 @@ module.exports = function(grunt) {
     copy: {
       options: {},
       files: {
-        dest: 'build/demo.html',
+        dest: 'demo/demo.html',
         src: 'src/demo.html'
       }
     }
