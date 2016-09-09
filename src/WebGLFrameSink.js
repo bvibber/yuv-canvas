@@ -49,7 +49,7 @@
 		var vertexShader,
 			fragmentShader,
 			program,
-			buffer,
+			buf,
 			err;
 
 		// In the world of GL there are no rectangles.
@@ -156,8 +156,8 @@
 					gl.TEXTURE3,
 					3,
 					buffer.y.stride * 4,
-					buffer.format.frame.height,
-					buildStripe(buffer.y.stride, buffer.format.frame.height)
+					buffer.format.height,
+					buildStripe(buffer.y.stride, buffer.format.height)
 				);
 				checkError();
 
@@ -166,8 +166,8 @@
 					gl.TEXTURE4,
 					4,
 					buffer.u.stride * 4,
-					YUVBuffer.chromaHeight(buffer.format),
-					buildStripe(buffer.u.stride, YUVBuffer.chromaHeight(buffer.format))
+					buffer.format.chromaHeight,
+					buildStripe(buffer.u.stride, buffer.format.chromaHeight)
 				);
 				checkError();
 			}
@@ -184,10 +184,10 @@
 			// Set up geometry
 			//
 
-			buffer = gl.createBuffer();
+			buf = gl.createBuffer();
 			checkError();
 
-			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+			gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 			checkError();
 
 			gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
@@ -206,10 +206,10 @@
 			// Set up the texture geometry...
 			function setupTexturePosition(varname, texWidth, format) {
 				// Warning: assumes that the stride for Cb and Cr is the same size in output pixels
-				var textureX0 = format.crop.left / texWidth;
-				var textureX1 = (format.crop.left + format.crop.width) / texWidth;
-				var textureY0 = (format.crop.top + format.crop.height) / format.frame.height;
-				var textureY1 = format.crop.top / format.frame.height;
+				var textureX0 = format.cropLeft / texWidth;
+				var textureX1 = (format.cropLeft + format.cropWidth) / texWidth;
+				var textureY0 = (format.cropTop + format.cropHeight) / format.height;
+				var textureY1 = format.cropTop / format.height;
 				var textureRectangle = new Float32Array([
 					textureX0, textureY0,
 					textureX1, textureY0,
@@ -236,7 +236,7 @@
 				checkError();
 			}
 			setupTexturePosition('aLumaPosition', buffer.y.stride, buffer.format);
-			setupTexturePosition('aChromaPosition', YUVBuffer.xToLuma(buffer.format, buffer.u.stride), buffer.format);
+			setupTexturePosition('aChromaPosition', buffer.u.stride * buffer.format.width / buffer.format.chromaWidth, buffer.format);
 
 			// Create the textures...
 			var textureY = attachTexture(
@@ -244,7 +244,7 @@
 				gl.TEXTURE0,
 				0,
 				buffer.y.stride,
-				buffer.frame.height,
+				buffer.format.height,
 				buffer.y.bytes
 			);
 			var textureCb = attachTexture(
@@ -252,7 +252,7 @@
 				gl.TEXTURE1,
 				1,
 				buffer.u.stride,
-				YUVBuffer.yToChroma(buffer.format, buffer.frame.height),
+				buffer.format.chromaHeight,
 				buffer.u.bytes
 			);
 			var textureCr = attachTexture(
@@ -260,7 +260,7 @@
 				gl.TEXTURE2,
 				2,
 				buffer.v.stride,
-				YUVBuffer.yToChroma(buffer.format, buffer.frame.height),
+				buffer.format.chromaHeight,
 				buffer.v.bytes
 			);
 

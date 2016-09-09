@@ -38,21 +38,21 @@
 		self.drawFrame = function drawFrame(buffer) {
 			var format = buffer.format;
 			if (imageData === null ||
-					imageData.width != format.frame.width ||
-					imageData.height != format.frame.height) {
-				initImageData(format.frame.width, format.frame.height);
+					imageData.width != format.width ||
+					imageData.height != format.height) {
+				initImageData(format.width, format.height);
 			}
 
 			// YUV -> RGB over the entire encoded frame
 			YCbCr.convertYCbCr(buffer, imageData.data);
 
-			var resample = (format.crop.width != format.display.width || format.crop.height != format.display.height);
+			var resample = (format.cropWidth != format.displayWidth || format.cropHeight != format.displayHeight);
 			var drawContext;
 			if (resample) {
 				// hack for non-square aspect-ratio
 				// putImageData doesn't resample, so we have to draw in two steps.
 				if (!resampleCanvas) {
-					initResampleCanvas(format.crop.width, format.crop.height);
+					initResampleCanvas(format.cropWidth, format.cropHeight);
 				}
 				drawContext = resampleContext;
 			} else {
@@ -62,11 +62,11 @@
 			// Draw cropped frame to either the final or temporary canvas
 			drawContext.putImageData(imageData,
 							         0, 0,
-											 format.crop.left, format.crop.top,
-											 format.crop.width, format.crop.height);
+											 format.cropLeft, format.cropTop,
+											 format.cropWidth, format.cropHeight);
 
 			if (resample) {
-				ctx.drawImage(resampleCanvas, 0, 0, format.display.width, format.display.height);
+				ctx.drawImage(resampleCanvas, 0, 0, format.displayWidth, format.displayHeight);
 			}
 		};
 
