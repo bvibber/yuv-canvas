@@ -1,15 +1,37 @@
+/*
+Copyright (c) 2014-2016 Brion Vibber <brion@pobox.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+MPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 (function() {
+	"use strict";
+
 	var fs = require('fs');
-	var YCBCR_VERTEX_SHADER = fs.readFileSync('./YCbCr.vsh');
-	var YCBCR_FRAGMENT_SHADER = fs.readFileSync('./YCbCr.fsh');
-	var YCBCR_STRIPE_FRAGMENT_SHADER = fs.readFileSync('./YCbCr-stripe.fsh');
+	var YCBCR_VERTEX_SHADER = fs.readFileSync('./shaders/YCbCr.vsh', 'utf8');
+	var YCBCR_FRAGMENT_SHADER = fs.readFileSync('./shaders/YCbCr.fsh', 'utf8');
+	var YCBCR_STRIPE_FRAGMENT_SHADER = fs.readFileSync('./shaders/YCbCr-stripe.fsh', 'utf8');
 
 	var YUVBuffer = require('yuv-buffer');
 
 	/**
 	 * Warning: canvas must not have been used for 2d drawing prior!
 	 *
-	 * @param HTMLCanvasElement canvas
+	 * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
 	 * @constructor
 	 */
 	function WebGLFrameSink(canvas) {
@@ -173,6 +195,10 @@
 			}
 		}
 
+		/**
+		 * Actually draw a frame.
+		 * @param {YUVFrame} buffer - YUV frame buffer object
+		 */
 		self.drawFrame = function(buffer) {
 			if (!program) {
 				init(buffer);
@@ -297,7 +323,7 @@
 	/**
 	 * Static function to check if WebGL will be available with appropriate features.
 	 *
-	 * @return boolean
+	 * @returns {boolean} - true if available
 	 */
 	WebGLFrameSink.isAvailable = function() {
 		var canvas = document.createElement('canvas'),

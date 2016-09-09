@@ -4,6 +4,7 @@
   "description": "Utility for drawing YUV image data to HTML5 canvas",
   "main": "index.js",
   "scripts": {
+    "grunt": "./node_modules/grunt/bin/grunt",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,9 +16,11 @@
   "author": "Brion Vibber <brion@pobox.com>",
   "license": "MIT",
   "devDependencies": {
+    "yuv-buffer": "^1.0.0",
     "brfs": "^1.4.3",
     "browserify": "^13.1.0",
     "grunt": "^1.0.1",
+    "grunt-browserify": "^5.0.0",
     "grunt-eslint": "^19.0.0"
   }
 }
