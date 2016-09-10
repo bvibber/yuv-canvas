@@ -2,10 +2,11 @@
   "name": "yuv-canvas",
   "version": "1.0.0",
   "description": "Utility for drawing YUV image data to HTML5 canvas",
-  "main": "build/yuv-canvas.js",
+  "main": "src/yuv-canvas.js",
   "scripts": {
-    "grunt": "./node_modules/grunt/bin/grunt",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "./node_modules/grunt/bin/grunt",
+    "test": "echo \"Open demo/demo.html in a browser.\" && exit 1",
+    "prepublish": "npm-run-all build"
   },
   "keywords": [
     "yuv",
