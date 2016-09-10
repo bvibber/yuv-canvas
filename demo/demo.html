@@ -11,11 +11,18 @@
 
   <canvas width=640 height=480></canvas>
 
+  <p>Try moving the sliders to apply a multiplier to each plane separately.</p>
+
   <table>
     <tr>
       <th>Y (luma)</th>
       <th>U (chroma)</th>
       <th>V (chroma)</th>
+    </tr>
+    <tr>
+      <th><input id=yfader type=range min=0 max=2 value=1 step=0.1></td>
+      <th><input id=ufader type=range min=0 max=2 value=1 step=0.1></td>
+      <th><input id=vfader type=range min=0 max=2 value=1 step=0.1></td>
     </tr>
     <tr>
       <td><img id=yplane src=cat-y.jpg width=320></td>

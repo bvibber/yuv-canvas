@@ -9,7 +9,12 @@
     yuvCanvas = new YUVCanvas(canvas),
     format,
     frame,
-    sourceData = {};
+    sourceData = {},
+    sourceFader = {
+      y: 1,
+      u: 1,
+      v: 1
+    };
 
   function setupFrame() {
     format = YUVBuffer.format({
@@ -34,19 +39,25 @@
   }
 
   // In this example we have separate images with Y, U, and V plane data.
-  // Copy the grayscale brightnesses into the given YUVPlane object,
-  // applying a multiplier which we can switch around.
+  // For each plane, we copy the grayscale values into the target YUVPlane
+  // object's data, applying a per-plane multiplier which is manipulable
+  // by the user.
   function copyBrightnessToPlane(imageData, plane, width, height, multiplier) {
+    // Because we're doing multiplication that may wrap, use the browser-optimized
+    // Uint8ClampedArray instead of the default Uint8Array view.
+    var clampedBytes = new Uint8ClampedArray(plane.bytes.buffer, plane.bytes.offset, plane.bytes.byteLength);
     for (var y = 0; y < height; y++) {
       for (var x = 0; x < width; x++) {
-        plane.bytes[y * plane.stride + x] = imageData.data[y * width * 4 + x * 4] * multiplier;
+        clampedBytes[y * plane.stride + x] = imageData.data[y * width * 4 + x * 4] * multiplier;
       }
     }
   }
 
   function setupSources() {
-    function setup(imageId, index) {
-      var image = document.getElementById(imageId);
+    function setup(index) {
+      var image = document.getElementById(index + 'plane'),
+        fader = document.getElementById(index + 'fader');
+
       function doit() {
         sourceData[index] = extractImageData(image);
         updateFrame();
@@ -56,22 +67,27 @@
       } else {
         image.addEventListener('load', doit);
       }
+
+      fader.addEventListener('input', function() {
+        sourceFader[index] = fader.value;
+        updateFrame();
+      })
     }
-    setup('yplane', 'y');
-    setup('uplane', 'u');
-    setup('vplane', 'v');
+    setup('y');
+    setup('u');
+    setup('v');
   }
 
   function updateFrame() {
     // Copy data in!
     if (sourceData.y) {
-      copyBrightnessToPlane(sourceData.y, frame.y, format.width, format.height, 1);
+      copyBrightnessToPlane(sourceData.y, frame.y, format.width, format.height, sourceFader.y);
     }
     if (sourceData.u) {
-      copyBrightnessToPlane(sourceData.u, frame.u, format.chromaWidth, format.chromaHeight, 1);
+      copyBrightnessToPlane(sourceData.u, frame.u, format.chromaWidth, format.chromaHeight, sourceFader.u);
     }
     if (sourceData.v) {
-      copyBrightnessToPlane(sourceData.v, frame.v, format.chromaWidth, format.chromaHeight, 1);
+      copyBrightnessToPlane(sourceData.v, frame.v, format.chromaWidth, format.chromaHeight, sourceFader.v);
     }
 
     yuvCanvas.drawFrame(frame);
