@@ -38,7 +38,7 @@ module.exports = function(grunt) {
       },
       demo: {
         files: {
-          'demo/demo.js': ['src/demo.js']
+          'demo/demo-bundled.js': ['demo/demo.js']
         },
         options: {
           transform: [[require('aliasify'), {
@@ -48,21 +48,13 @@ module.exports = function(grunt) {
           }]]
         }
       }
-    },
-    copy: {
-      options: {},
-      files: {
-        dest: 'demo/demo.html',
-        src: 'src/demo.html'
-      }
     }
   });
 
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-text-replace');
   grunt.loadNpmTasks('grunt-browserify');
-  grunt.loadNpmTasks('grunt-copy');
 
-  grunt.registerTask('default', ['eslint', 'replace', 'browserify', 'copy']);
+  grunt.registerTask('default', ['eslint', 'replace', 'browserify']);
 
 };
