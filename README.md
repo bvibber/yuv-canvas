@@ -7,14 +7,15 @@ and colorspace conversion.
 #Copyright
 
 Copyright 2014-2016 by Brion Vibber <brion@pobox.com>
-MIT-style license.
+MIT license, see the source files:
 
 * Source: https://github.com/brion/yuv-canvas
+* Issues: https://github.com/brion/yuv-canvas/issues
 
 #Data format
 
 Planar YUV frames are packed into objects per the
-[yuv-buffer](https://github.com/brion/yuv-buffer) module. Frame buffer objects
+[yuv-buffer](https://github.com/brion/yuv-buffer) format. Frame buffer objects
 can be safely copied or transferred between worker threads, and can be either
 garbage collected or reused for another frame after output.
 
@@ -31,8 +32,7 @@ Caller can pass the 'disableWebGL: false' key to options to force use of the
 software conversion and 2d canvas, or 'forceWebGL: true' to force a failure if
 WebGL initialization fails.
 
-
-#Windows vs luminance textures
+##Windows vs luminance textures
 
 On most operating systems, the Y, U and V planes are uploaded as luminance
 textures, then combined into RGB output by a shader.
@@ -47,29 +47,44 @@ texture upload and unpacked in the shader. This performs more consistently, but
 disables filtering and may cause visual glitches on files that have a
 non-default aspect ratio.
 
+#Usage
 
-# Usage
+`yuv-canvas` is intended to be used via [browserify](http://browserify.org/), [webpack](http://webpack.github.io/), or similar npm-friendly bundling tool.
 
 ```
 var YUVCanvas = require('yuv-canvas');
 
 // Get your canvas
 var canvas = document.querySelector('canvas#myvid');
-// Note that the crop-display area of the frame will be drawn over the entire
-// canvas, so make sure the canvas itself is sized and positioned correctly.
-canvas.width = 1280;
-canvas.height = 720;
 
-// Create a wrapper. This will take over the drawing context of the canvas,
-// which may include turning a canvas into WebGL mode. From now on you can
-// manipulate the canvas itself such as changing its size or style, but should
-// not attempt to touch its drawing context directly.
+// Wrap it in a YUVCanvas!
+//
+// This will take over the canvas drawing context, which may include switching
+// it into WebGL mode or resizing it to fit the output frames. From now on you
+// can manipulate the canvas element itself such as attaching it in the DOM or
+// changing its CSS styles, but should not attempt to touch its size or drawing
+// context directly.
 var myyuv = new YUVCanvas(canvas);
 
 // Now... given a YUV frame buffer object, draw it!
-buffer = decodeVideoFrame();
+var buffer = decodeVideoFrame();
 yuv.drawFrame(buffer);
 
 // Or clear the canvas.
 yuv.clear();
 ```
+
+#Demo
+
+Included demo combines Y, U, and V planes from grayscale JPEGs into a color
+photograph on a canvas.
+
+todo: link to live demo
+
+#Building
+
+Run `npm install` (or `grunt` to rebuild if necessary) to build derived files in
+a local source checkout.
+
+Derived files are the array of WebGL shaders (`build/shaders.js`) and the bundled
+JS for the demo (`demo/demo-bundled.js`).
