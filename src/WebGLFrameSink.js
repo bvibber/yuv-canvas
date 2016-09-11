@@ -201,6 +201,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				// Keep the canvas at the right size...
 				canvas.width = format.displayWidth;
 				canvas.height = format.displayHeight;
+				gl.viewport(0, 0, format.displayWidth, format.displayHeight);
+				self.clear();
 			}
 
 			if (!program) {
