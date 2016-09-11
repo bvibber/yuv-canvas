@@ -76,10 +76,10 @@ yuv.clear();
 
 #Demo
 
-Included demo combines Y, U, and V planes from grayscale JPEGs into a color
-photograph on a canvas.
+The [included demo](https://brion.github.io/yuv-canvas/demo.html)
+combines Y, U, and V planes from grayscale JPEGs into a color photograph
+on a canvas. Check it out!
 
-todo: link to live demo
 
 #Building
 
