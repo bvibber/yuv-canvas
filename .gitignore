@@ -1,5 +1,4 @@
 build
 demo/demo-bundled.js
-standalone
 node_modules
 .DS_Store

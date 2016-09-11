@@ -28,14 +28,6 @@ module.exports = function(grunt) {
       }
     },
     browserify: {
-      dist: {
-        files: {
-          'standalone/yuv-canvas.js': ['src/yuv-canvas.js'],
-        },
-        options: {
-          standalone: 'YUVCanvas'
-        }
-      },
       demo: {
         files: {
           'demo/demo-bundled.js': ['demo/demo.js']
