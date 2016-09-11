@@ -87,4 +87,4 @@ Run `npm install` (or `grunt` to rebuild if necessary) to build derived files in
 a local source checkout.
 
 Derived files are the array of WebGL shaders (`build/shaders.js`) and the bundled
-JS for the demo (`demo/demo-bundled.js`).
+JS for the demo (`docs/demo-bundled.js`).

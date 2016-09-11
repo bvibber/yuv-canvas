@@ -30,7 +30,7 @@ module.exports = function(grunt) {
     browserify: {
       demo: {
         files: {
-          'demo/demo-bundled.js': ['demo/demo.js']
+          'docs/demo-bundled.js': ['docs/demo.js']
         },
         options: {
           transform: [[require('aliasify'), {
