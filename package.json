@@ -6,7 +6,7 @@
   "scripts": {
     "build": "./node_modules/grunt/bin/grunt",
     "test": "echo \"Open demo/demo.html in a browser.\" && exit 1",
-    "prepublish": "npm-run-all build"
+    "prepublish": "npm run-script build"
   },
   "keywords": [
     "yuv",
