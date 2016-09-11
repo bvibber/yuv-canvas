@@ -195,6 +195,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		 * @param {YUVFrame} buffer - YUV frame buffer object
 		 */
 		self.drawFrame = function(buffer) {
+			var format = buffer.format;
+
+			if (canvas.width !== format.displayWidth || canvas.height !== format.displayHeight) {
+				// Keep the canvas at the right size...
+				canvas.width = format.displayWidth;
+				canvas.height = format.displayHeight;
+			}
+
 			if (!program) {
 				init(buffer);
 			}
@@ -225,7 +233,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 			// Set up the texture geometry...
-			function setupTexturePosition(varname, texWidth, format) {
+			function setupTexturePosition(varname, texWidth) {
 				// Warning: assumes that the stride for Cb and Cr is the same size in output pixels
 				var textureX0 = format.cropLeft / texWidth;
 				var textureX1 = (format.cropLeft + format.cropWidth) / texWidth;
@@ -256,8 +264,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.vertexAttribPointer(texturePositionLocation, 2, gl.FLOAT, false, 0, 0);
 				checkError();
 			}
-			setupTexturePosition('aLumaPosition', buffer.y.stride, buffer.format);
-			setupTexturePosition('aChromaPosition', buffer.u.stride * buffer.format.width / buffer.format.chromaWidth, buffer.format);
+			setupTexturePosition('aLumaPosition', buffer.y.stride);
+			setupTexturePosition('aChromaPosition', buffer.u.stride * format.width / format.chromaWidth);
 
 			// Create the textures...
 			var textureY = attachTexture(
@@ -265,7 +273,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.TEXTURE0,
 				0,
 				buffer.y.stride,
-				buffer.format.height,
+				format.height,
 				buffer.y.bytes
 			);
 			var textureCb = attachTexture(
@@ -273,7 +281,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.TEXTURE1,
 				1,
 				buffer.u.stride,
-				buffer.format.chromaHeight,
+				format.chromaHeight,
 				buffer.u.bytes
 			);
 			var textureCr = attachTexture(
@@ -281,7 +289,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.TEXTURE2,
 				2,
 				buffer.v.stride,
-				buffer.format.chromaHeight,
+				format.chromaHeight,
 				buffer.v.bytes
 			);
 
