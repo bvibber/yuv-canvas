@@ -57,14 +57,14 @@ var YUVCanvas = require('yuv-canvas');
 // Get your canvas
 var canvas = document.querySelector('canvas#myvid');
 
-// Wrap it in a YUVCanvas!
+// Attach it to a YUVCanvas!
 //
 // This will take over the canvas drawing context, which may include switching
 // it into WebGL mode or resizing it to fit the output frames. From now on you
 // can manipulate the canvas element itself such as attaching it in the DOM or
 // changing its CSS styles, but should not attempt to touch its size or drawing
 // context directly.
-var yuv = new YUVCanvas(canvas);
+var yuv = YUVCanvas.attach(canvas);
 
 // Now... given a YUV frame buffer object, draw it!
 var buffer = decodeVideoFrame();

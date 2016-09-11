@@ -36,7 +36,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	 */
 	function convertYCbCr(buffer, output) {
 		var width = buffer.format.width,
-			height = buffer.format.frame.height,
+			height = buffer.format.height,
 			hdec = depower(buffer.format.width / buffer.format.chromaWidth),
 			vdec = depower(buffer.format.height / buffer.format.chromaHeight),
 			bytesY = buffer.y.bytes,
@@ -136,4 +136,4 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	module.exports = {
 		convertYCbCr: convertYCbCr
 	};
-});
+})();

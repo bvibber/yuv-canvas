@@ -18,11 +18,11 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-"use strict";
-
 (function() {
+  "use strict";
 
-  var SoftwareFrameSink = require('./SoftwareFrameSink.js'),
+  var FrameSink = require('./FrameSink.js'),
+    SoftwareFrameSink = require('./SoftwareFrameSink.js'),
     WebGLFrameSink = require('./WebGLFrameSink.js');
 
   /**
@@ -30,42 +30,33 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    * @property {boolean} webGL - Whether to use WebGL to draw to the canvas and accelerate color space conversion. If left out, defaults to auto-detect.
    */
 
-  /**
-   * Create a YUVCanvas and attach it to an HTML5 canvas element.
-   *
-   * This will take over the drawing context of the canvas and may turn
-   * it into a WebGL 3d canvas if possible. Do not attempt to use the
-   * drawing context directly after this.
-   *
-   * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
-   * @param {YUVCanvasOptions} options - map of options
-   * @throws exception if WebGL requested but unavailable
-   * @constructor
-   */
-  function YUVCanvas(canvas, options) {
-    options = options || {};
-    var webGL = ('webGL' in options) ? options.webGL : WebGLFrameSink.isAvailable();
-    if (webGL) {
-      this._sink = new WebGLFrameSink(canvas, options);
-    } else {
-      this._sink = new SoftwareFrameSink(canvas, options);
+  var YUVCanvas = {
+    FrameSink: FrameSink,
+
+    SoftwareFrameSink: SoftwareFrameSink,
+
+    WebGLFrameSink: WebGLFrameSink,
+
+    /**
+     * Attach a suitable FrameSink instance to an HTML5 canvas element.
+     *
+     * This will take over the drawing context of the canvas and may turn
+     * it into a WebGL 3d canvas if possible. Do not attempt to use the
+     * drawing context directly after this.
+     *
+     * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
+     * @param {YUVCanvasOptions} options - map of options
+     * @returns {FrameSink} - instance of suitable subclass.
+     */
+    attach: function(canvas, options) {
+      options = options || {};
+      var webGL = ('webGL' in options) ? options.webGL : WebGLFrameSink.isAvailable();
+      if (webGL) {
+        return new WebGLFrameSink(canvas, options);
+      } else {
+        return new SoftwareFrameSink(canvas, options);
+      }
     }
-  }
-
-  /**
-   * Draw a single frame on the canvas.
-   * @param {YUVBuffer} buffer - the YUV buffer to draw
-   * @see {@link https://www.npmjs.com/package/yuv-buffer|yuv-buffer} for format
-   */
-  YUVCanvas.prototype.drawFrame = function drawFrame(buffer) {
-    this._sink.drawFrame(buffer);
-  };
-
-  /**
-   * Clear the canvas using appropriate underlying 2d or 3d context.
-   */
-  YUVCanvas.prototype.clear = function clear() {
-    this._sink.clear();
   };
 
   module.exports = YUVCanvas;

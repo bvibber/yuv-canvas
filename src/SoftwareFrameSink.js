@@ -21,7 +21,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (function() {
 	"use strict";
 
-	var YCbCr = require("./YCbCr.js");
+	var FrameSink = require('./FrameSink.js'),
+		YCbCr = require('./YCbCr.js');
 
 	/**
 	 * @param {HTMLCanvasElement} canvas - HTML canvas eledment to attach to
@@ -106,6 +107,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 		return self;
 	}
+
+	SoftwareFrameSink.prototype = Object.create(FrameSink.prototype);
 
 	module.exports = SoftwareFrameSink;
 })();

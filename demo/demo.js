@@ -6,7 +6,7 @@
     YUVCanvas = require('yuv-canvas');
 
   var canvas = document.querySelector('canvas'),
-    yuvCanvas = new YUVCanvas(canvas),
+    yuvCanvas = YUVCanvas.attach(canvas),
     format,
     frame,
     sourceData = {},

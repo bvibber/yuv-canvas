@@ -21,7 +21,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 (function() {
 	"use strict";
 
-	var shaders = require('../build/shaders.js');
+	var FrameSink = require('./FrameSink.js'),
+		shaders = require('../build/shaders.js');
 
 	/**
 	 * Warning: canvas must not have been used for 2d drawing prior!
@@ -381,6 +382,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			return false;
 		}
 	};
+
+	WebGLFrameSink.prototype = Object.create(FrameSink.prototype);
 
 	module.exports = WebGLFrameSink;
 })();
