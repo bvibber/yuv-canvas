@@ -201,7 +201,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				// Keep the canvas at the right size...
 				canvas.width = format.displayWidth;
 				canvas.height = format.displayHeight;
-				gl.viewport(0, 0, format.displayWidth, format.displayHeight);
 				self.clear();
 			}
 
@@ -301,13 +300,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		};
 
 		self.clear = function() {
+			gl.viewport(0, 0, canvas.width, canvas.height);
 			gl.clearColor(0.0, 0.0, 0.0, 0.0);
 			gl.clear(gl.COLOR_BUFFER_BIT);
 		};
 
-		// @fixme make the clearing work reliably
-		self.clear();
-		gl.viewport(0, 0, canvas.width, canvas.height);
 		self.clear();
 
 		return self;
