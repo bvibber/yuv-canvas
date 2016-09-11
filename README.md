@@ -57,7 +57,7 @@ var YUVCanvas = require('yuv-canvas');
 // Get your canvas
 var canvas = document.querySelector('canvas#myvid');
 
-// Attach it to a YUVCanvas!
+// Attach it to a YUVCanvas.FrameSink instance!
 //
 // This will take over the canvas drawing context, which may include switching
 // it into WebGL mode or resizing it to fit the output frames. From now on you
