@@ -26,7 +26,6 @@
     "browserify": "^13.1.0",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
-    "grunt-copy": "^0.1.0",
     "grunt-eslint": "^19.0.0",
     "grunt-text-replace": "^0.4.0",
     "yuv-buffer": "^1.0.0"
