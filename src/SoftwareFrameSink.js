@@ -62,7 +62,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		self.drawFrame = function drawFrame(buffer) {
 			var format = buffer.format;
 
-			if (canvas.width !== format.displayWidth || canvas.height || format.displayHeight) {
+			if (canvas.width !== format.displayWidth || canvas.height !== format.displayHeight) {
 				// Keep the canvas at the right size...
 				canvas.width = format.displayWidth;
 				canvas.height = format.displayHeight;

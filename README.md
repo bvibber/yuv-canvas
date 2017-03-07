@@ -12,6 +12,14 @@ MIT license, see the source files:
 * Source: https://github.com/brion/yuv-canvas
 * Issues: https://github.com/brion/yuv-canvas/issues
 
+#Updates
+
+1.0.1 - 2017-02-17
+* fix flickering in Safari with software rendering
+
+1.0.0 - 2016-09-11
+* Initial break-out release from ogv.js
+
 #Data format
 
 Planar YUV frames are packed into objects per the
