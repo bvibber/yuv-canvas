@@ -1,6 +1,6 @@
 {
   "name": "yuv-canvas",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Utility for drawing YUV image data to HTML5 canvas",
   "main": "src/yuv-canvas.js",
   "repository": {

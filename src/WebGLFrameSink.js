@@ -339,8 +339,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			// Aaaaand draw stuff.
 			gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
-			
-			gl.getError();
 		};
 
 		self.clear = function() {
@@ -353,6 +351,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 		return self;
 	}
+
+	// For Windows; luminance and alpha textures are ssllooww to upload,
+	// so we pack into RGBA and unpack in the shaders.
+	//
+	// This seems to affect all browsers on Windows, probably due to fun
+	// mismatches between GL and D3D.
+	WebGLFrameSink.stripe = (function() {
+		if (navigator.userAgent.indexOf('Windows') !== -1) {
+			return true;
+		}
+		return false;
+	})();
 
 	/**
 	 * Static function to check if WebGL will be available with appropriate features.
@@ -380,9 +390,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				height = 4,
 				texture = gl.createTexture(),
 				data = new Uint8Array(width * height),
-				texWidth = width,
-				format = gl.LUMINANCE,
-				filter = gl.LINEAR;
+				texWidth = WebGLFrameSink.stripe ? (width / 4) : width,
+				format = WebGLFrameSink.stripe ? gl.RGBA : gl.LUMINANCE,
+				filter = WebGLFrameSink.stripe ? gl.NEAREST : gl.LINEAR;
 
 			gl.activeTexture(register);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
