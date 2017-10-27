@@ -131,6 +131,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
+				var uploadTemp = !textures[name + '_temp'];
 				var tempTexture = createOrReuseTexture(name + '_temp');
 				gl.activeTexture(gl.TEXTURE1);
 				gl.bindTexture(gl.TEXTURE_2D, tempTexture);
@@ -139,17 +140,33 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-				gl.texImage2D(
-					gl.TEXTURE_2D,
-					0, // mip level
-					gl.RGBA, // internal format
-					width / 4,
-					height,
-					0, // border
-					gl.RGBA, // format
-					gl.UNSIGNED_BYTE, //type
-					data // data!
-				);
+				if (uploadTemp) {
+					// new texture
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						0, // mip level
+						gl.RGBA, // internal format
+						width / 4,
+						height,
+						0, // border
+						gl.RGBA, // format
+						gl.UNSIGNED_BYTE, // type
+						data // data!
+					);
+				} else {
+					// update texture
+					gl.texSubImage2D(
+						gl.TEXTURE_2D,
+						0, // mip level
+						0, // x offset
+						0, // y offset
+						width / 4,
+						height,
+						gl.RGBA, // format
+						gl.UNSIGNED_BYTE, // type
+						data // data!
+					);
+				}
 
 				var stripeTexture = textures[name + '_stripe'];
 				var uploadStripe = !stripeTexture;
