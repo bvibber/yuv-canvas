@@ -795,8 +795,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			gl.uniform1i(gl.getUniformLocation(program, name), index);
 		}
 
-		function buildStripe(width, height) {
-			var len = width * height,
+		var stripes = {};
+
+		function buildStripe(width) {
+			if (stripes[width]) {
+				return stripes[width];
+			}
+			var len = width,
 				out = new Uint32Array(len);
 			for (var i = 0; i < len; i += 4) {
 				out[i    ] = 0x000000ff;
@@ -804,7 +809,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				out[i + 2] = 0x00ff0000;
 				out[i + 3] = 0xff000000;
 			}
-			return new Uint8Array(out.buffer);
+			return stripes[width] = new Uint8Array(out.buffer);
 		}
 
 		function initProgram(vertexShaderSource, fragmentShaderSource) {

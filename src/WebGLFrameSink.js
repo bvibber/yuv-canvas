@@ -146,7 +146,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					data // data!
 				);
 
-				var stripeTexture = createOrReuseTexture(name + '_stripe');
+				var stripeTexture = textures[name + '_stripe'];
+				var uploadStripe = !stripeTexture;
+				if (uploadStripe) {
+					stripeTexture = createOrReuseTexture(name + '_stripe');
+				}
 				gl.activeTexture(gl.TEXTURE2);
 				gl.bindTexture(gl.TEXTURE_2D, stripeTexture);
 				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uStripe'), 2);
@@ -154,17 +158,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-				gl.texImage2D(
-					gl.TEXTURE_2D,
-					0, // mip level
-					gl.RGBA, // internal format
-					width,
-					1,
-					0, // border
-					gl.RGBA, // format
-					gl.UNSIGNED_BYTE, //type
-					buildStripe(width, 1) // data!
-				);
+				if (uploadStripe) {
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						0, // mip level
+						gl.RGBA, // internal format
+						width,
+						1,
+						0, // border
+						gl.RGBA, // format
+						gl.UNSIGNED_BYTE, //type
+						buildStripe(width, 1) // data!
+					);
+				}
 
 				var buf = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -231,8 +237,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			gl.uniform1i(gl.getUniformLocation(program, name), index);
 		}
 
-		function buildStripe(width, height) {
-			var len = width * height,
+		var stripes = {};
+
+		function buildStripe(width) {
+			if (stripes[width]) {
+				return stripes[width];
+			}
+			var len = width,
 				out = new Uint32Array(len);
 			for (var i = 0; i < len; i += 4) {
 				out[i    ] = 0x000000ff;
@@ -240,7 +251,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				out[i + 2] = 0x00ff0000;
 				out[i + 3] = 0xff000000;
 			}
-			return new Uint8Array(out.buffer);
+			return stripes[width] = new Uint8Array(out.buffer);
 		}
 
 		function initProgram(vertexShaderSource, fragmentShaderSource) {
