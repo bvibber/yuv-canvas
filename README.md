@@ -16,6 +16,7 @@ MIT license, see the source files:
 
 1.2.0 - 2017-10-27
 * optimized Windows rendering (restored "stripe" more cleanly)
+* retooled rendering order to minimize CPU/GPU sync points
 
 1.1.0 - 2017-10-27
 * improved scaling/filtering on Windows (dropped "stripe" optimization)
