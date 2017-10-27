@@ -2,7 +2,8 @@
 module.exports = {
   vertex: "attribute vec2 aPosition;\nattribute vec2 aLumaPosition;\nattribute vec2 aChromaPosition;\nvarying vec2 vLumaPosition;\nvarying vec2 vChromaPosition;\nvoid main() {\n    gl_Position = vec4(aPosition, 0, 1);\n    vLumaPosition = aLumaPosition;\n    vChromaPosition = aChromaPosition;\n}\n",
   fragment: "// inspired by https://github.com/mbebenita/Broadway/blob/master/Player/canvas.js\n\nprecision mediump float;\nuniform sampler2D uTextureY;\nuniform sampler2D uTextureCb;\nuniform sampler2D uTextureCr;\nvarying vec2 vLumaPosition;\nvarying vec2 vChromaPosition;\nvoid main() {\n   // Y, Cb, and Cr planes are uploaded as LUMINANCE textures.\n   float fY = texture2D(uTextureY, vLumaPosition).x;\n   float fCb = texture2D(uTextureCb, vChromaPosition).x;\n   float fCr = texture2D(uTextureCr, vChromaPosition).x;\n\n   // Premultipy the Y...\n   float fYmul = fY * 1.1643828125;\n\n   // And convert that to RGB!\n   gl_FragColor = vec4(\n     fYmul + 1.59602734375 * fCr - 0.87078515625,\n     fYmul - 0.39176171875 * fCb - 0.81296875 * fCr + 0.52959375,\n     fYmul + 2.017234375   * fCb - 1.081390625,\n     1\n   );\n}\n",
-  fragmentStripe: "// inspired by https://github.com/mbebenita/Broadway/blob/master/Player/canvas.js\n// extra 'stripe' texture fiddling to work around IE 11's poor performance on gl.LUMINANCE and gl.ALPHA textures\n\nprecision mediump float;\nuniform sampler2D uStripeLuma;\nuniform sampler2D uStripeChroma;\nuniform sampler2D uTextureY;\nuniform sampler2D uTextureCb;\nuniform sampler2D uTextureCr;\nvarying vec2 vLumaPosition;\nvarying vec2 vChromaPosition;\nvoid main() {\n   // Y, Cb, and Cr planes are mapped into a pseudo-RGBA texture\n   // so we can upload them without expanding the bytes on IE 11\n   // which doesn\\'t allow LUMINANCE or ALPHA textures.\n   // The stripe textures mark which channel to keep for each pixel.\n   vec4 vStripeLuma = texture2D(uStripeLuma, vLumaPosition);\n   vec4 vStripeChroma = texture2D(uStripeChroma, vChromaPosition);\n\n   // Each texture extraction will contain the relevant value in one\n   // channel only.\n   vec4 vY = texture2D(uTextureY, vLumaPosition) * vStripeLuma;\n   vec4 vCb = texture2D(uTextureCb, vChromaPosition) * vStripeChroma;\n   vec4 vCr = texture2D(uTextureCr, vChromaPosition) * vStripeChroma;\n\n   // Now assemble that into a YUV vector, and premultipy the Y...\n   vec3 YUV = vec3(\n     (vY.x  + vY.y  + vY.z  + vY.w) * 1.1643828125,\n     (vCb.x + vCb.y + vCb.z + vCb.w),\n     (vCr.x + vCr.y + vCr.z + vCr.w)\n   );\n   // And convert that to RGB!\n   gl_FragColor = vec4(\n     YUV.x + 1.59602734375 * YUV.z - 0.87078515625,\n     YUV.x - 0.39176171875 * YUV.y - 0.81296875 * YUV.z + 0.52959375,\n     YUV.x + 2.017234375   * YUV.y - 1.081390625,\n     1\n   );\n}\n"
+  vertexStripe: "attribute vec2 aPosition;\nattribute vec2 aTexturePosition;\nvarying vec2 vTexturePosition;\n\nvoid main() {\n    gl_Position = vec4(aPosition, 0, 1);\n    vTexturePosition = aTexturePosition;\n}\n",
+  fragmentStripe: "// extra 'stripe' texture fiddling to work around IE 11's poor performance on gl.LUMINANCE and gl.ALPHA textures\n\nprecision mediump float;\nuniform sampler2D uStripe;\nuniform sampler2D uTexture;\nvarying vec2 vTexturePosition;\nvoid main() {\n   // Y, Cb, and Cr planes are mapped into a pseudo-RGBA texture\n   // so we can upload them without expanding the bytes on IE 11\n   // which doesn\\'t allow LUMINANCE or ALPHA textures.\n   // The stripe textures mark which channel to keep for each pixel.\n   vec4 vStripe = texture2D(uStripe, vTexturePosition);\n\n   // Each texture extraction will contain the relevant value in one\n   // channel only.\n   vec4 vTemp = texture2D(uTexture, vTexturePosition) * vStripe;\n\n   // Assemble it back\n   float fLuminance = vTemp.x + vTemp.y + vTemp.z + vTemp.w;\n\n   gl_FragColor = vec4(fLuminance, fLuminance, fLuminance, 1);\n}\n"
 };
 
 },{}],2:[function(require,module,exports){
@@ -627,10 +628,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		}
 
 
-		var vertexShader,
-			fragmentShader,
-			program,
-			buf,
+		var program,
+			unpackProgram,
 			err;
 
 		// In the world of GL there are no rectangles.
@@ -649,58 +648,161 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		]);
 
 		var textures = {};
-		function attachTexture(name, register, index, width, height, data) {
-			var texture;
+		var framebuffers = {};
 
-			if (textures[name]) {
-				// Reuse & update the existing texture
-				texture = textures[name];
-			} else {
-				textures[name] = texture = gl.createTexture();
-				checkError();
-
-				gl.uniform1i(gl.getUniformLocation(program, name), index);
-				checkError();
+		function createOrReuseTexture(name) {
+			if (!textures[name]) {
+				textures[name] = gl.createTexture();
 			}
-			gl.activeTexture(register);
-			checkError();
-			gl.bindTexture(gl.TEXTURE_2D, texture);
-			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			checkError();
-
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0, // mip level
-				gl.LUMINANCE, // internal format
-				width,
-				height,
-				0, // border
-				gl.LUMINANCE, // format
-				gl.UNSIGNED_BYTE, //type
-				data // data!
-			);
-			checkError();
-
-			return texture;
+			return textures[name];
 		}
 
-		function init(buffer) {
-			vertexShader = compileShader(gl.VERTEX_SHADER, shaders.vertex);
-			fragmentShader = compileShader(gl.FRAGMENT_SHADER, shaders.fragment);
+		function uploadTexture(name, width, height, data) {
+			var texture = createOrReuseTexture(name);
+			if (WebGLFrameSink.stripe) {
+				// Upload to a temporary RGBA texture, then unpack it.
+				// This is faster than CPU-side swizzling in ANGLE on Windows.
+				gl.useProgram(unpackProgram);
 
-			program = gl.createProgram();
+				if (!framebuffers[name]) {
+					// Create a framebuffer and an empty target size
+					framebuffers[name] = gl.createFramebuffer();
+					gl.activeTexture(gl.TEXTURE0);
+					gl.bindTexture(gl.TEXTURE_2D, texture);
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						0, // mip level
+						gl.RGBA, // internal format
+						width,
+						height,
+						0, // border
+						gl.RGBA, // format
+						gl.UNSIGNED_BYTE, //type
+						null // data!
+					);
+				}
+
+				var tempTexture = createOrReuseTexture(name + '_temp');
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, tempTexture);
+				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uTexture'), 0);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0, // mip level
+					gl.RGBA, // internal format
+					width / 4,
+					height,
+					0, // border
+					gl.RGBA, // format
+					gl.UNSIGNED_BYTE, //type
+					data // data!
+				);
+
+				var stripeTexture = createOrReuseTexture(name + '_stripe');
+				gl.activeTexture(gl.TEXTURE1);
+				gl.bindTexture(gl.TEXTURE_2D, stripeTexture);
+				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uStripe'), 1);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0, // mip level
+					gl.RGBA, // internal format
+					width,
+					1,
+					0, // border
+					gl.RGBA, // format
+					gl.UNSIGNED_BYTE, //type
+					buildStripe(width, 1) // data!
+				);
+
+				var buf = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+				gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
+
+				var positionLocation = gl.getAttribLocation(program, 'aPosition');
+				gl.enableVertexAttribArray(positionLocation);
+				gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+				// Set up the texture geometry...
+				var textureRectangle = new Float32Array([
+					0, 0,
+					1, 0,
+					0, 1,
+					0, 1,
+					1, 0,
+					1, 1
+				]);
+
+				var texturePositionBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, texturePositionBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, textureRectangle, gl.STATIC_DRAW);
+
+				var texturePositionLocation = gl.getAttribLocation(unpackProgram, 'aTexturePosition');
+				gl.enableVertexAttribArray(texturePositionLocation);
+				gl.vertexAttribPointer(texturePositionLocation, 2, gl.FLOAT, false, 0, 0);
+
+				// Draw into the target texture...
+				var fb = framebuffers[name];
+				gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+
+				gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	
+			} else {
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, texture);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0, // mip level
+					gl.LINEAR, // internal format
+					width,
+					height,
+					0, // border
+					gl.LINEAR, // format
+					gl.UNSIGNED_BYTE, //type
+					data // data!
+				);
+			}
+		}
+
+		function attachTexture(name, register, index) {
+			gl.uniform1i(gl.getUniformLocation(program, name), index);
+			gl.activeTexture(register);
+			gl.bindTexture(gl.TEXTURE_2D, textures[name]);
+		}
+
+		function buildStripe(width, height) {
+			var len = width * height,
+				out = new Uint32Array(len);
+			for (var i = 0; i < len; i += 4) {
+				out[i    ] = 0x000000ff;
+				out[i + 1] = 0x0000ff00;
+				out[i + 2] = 0x00ff0000;
+				out[i + 3] = 0xff000000;
+			}
+			return new Uint8Array(out.buffer);
+		}
+
+		function initProgram(vertexShaderSource, fragmentShaderSource) {
+			var vertexShader = compileShader(gl.VERTEX_SHADER, vertexShaderSource);
+			var fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+			var program = gl.createProgram();
 			gl.attachShader(program, vertexShader);
-			checkError();
-
 			gl.attachShader(program, fragmentShader);
-			checkError();
 
 			gl.linkProgram(program);
 			if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
@@ -709,8 +811,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				throw new Error('GL program linking failed: ' + err);
 			}
 
-			gl.useProgram(program);
-			checkError();
+			return program;
+		}
+
+		function init() {
+			if (WebGLFrameSink.stripe) {
+				unpackProgram = initProgram(shaders.vertexStripe, shaders.fragmentStripe);
+			}
+			program = initProgram(shaders.vertex, shaders.fragment);
 		}
 
 		/**
@@ -728,32 +836,26 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			}
 
 			if (!program) {
-				init(buffer);
+				init();
 			}
 
+			// Create the textures...
+			// If using stripe mode this may switch program during upload!
+			uploadTexture('uTextureY', buffer.y.stride, format.height, buffer.y.bytes);
+			uploadTexture('uTextureU', buffer.u.stride, format.chromaHeight, buffer.u.bytes);
+			uploadTexture('uTextureV', buffer.v.stride, format.chromaHeight, buffer.v.bytes);
+
 			// Set up the rectangle and draw it
+			gl.useProgram(program);
 
-			//
 			// Set up geometry
-			//
-
-			buf = gl.createBuffer();
-			checkError();
-
+			var buf = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-			checkError();
-
 			gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
-			checkError();
 
 			var positionLocation = gl.getAttribLocation(program, 'aPosition');
-			checkError();
-
 			gl.enableVertexAttribArray(positionLocation);
-			checkError();
-
 			gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-			checkError();
 
 
 			// Set up the texture geometry...
@@ -774,52 +876,23 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 				var texturePositionBuffer = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, texturePositionBuffer);
-				checkError();
-
 				gl.bufferData(gl.ARRAY_BUFFER, textureRectangle, gl.STATIC_DRAW);
-				checkError();
 
 				var texturePositionLocation = gl.getAttribLocation(program, varname);
-				checkError();
-
 				gl.enableVertexAttribArray(texturePositionLocation);
-				checkError();
-
 				gl.vertexAttribPointer(texturePositionLocation, 2, gl.FLOAT, false, 0, 0);
-				checkError();
 			}
 			setupTexturePosition('aLumaPosition', buffer.y.stride);
 			setupTexturePosition('aChromaPosition', buffer.u.stride * format.width / format.chromaWidth);
-
-			// Create the textures...
-			var textureY = attachTexture(
-				'uTextureY',
-				gl.TEXTURE0,
-				0,
-				buffer.y.stride,
-				format.height,
-				buffer.y.bytes
-			);
-			var textureCb = attachTexture(
-				'uTextureCb',
-				gl.TEXTURE1,
-				1,
-				buffer.u.stride,
-				format.chromaHeight,
-				buffer.u.bytes
-			);
-			var textureCr = attachTexture(
-				'uTextureCr',
-				gl.TEXTURE2,
-				2,
-				buffer.v.stride,
-				format.chromaHeight,
-				buffer.v.bytes
-			);
+			
+			attachTexture('uTextureY', gl.TEXTURE0, 0);
+			attachTexture('uTextureU', gl.TEXTURE1, 1);
+			attachTexture('uTextureV', gl.TEXTURE2, 2);
 
 			// Aaaaand draw stuff.
 			gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
-			checkError();
+			
+			gl.getError();
 		};
 
 		self.clear = function() {

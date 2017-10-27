@@ -64,10 +64,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		}
 
 
-		var vertexShader,
-			fragmentShader,
-			program,
-			buf,
+		var program,
+			unpackProgram,
 			err;
 
 		// In the world of GL there are no rectangles.
@@ -86,58 +84,172 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		]);
 
 		var textures = {};
-		function attachTexture(name, register, index, width, height, data) {
-			var texture;
+		var framebuffers = {};
 
-			if (textures[name]) {
-				// Reuse & update the existing texture
-				texture = textures[name];
-			} else {
-				textures[name] = texture = gl.createTexture();
-				checkError();
-
-				gl.uniform1i(gl.getUniformLocation(program, name), index);
-				checkError();
+		function createOrReuseTexture(name) {
+			if (!textures[name]) {
+				textures[name] = gl.createTexture();
 			}
-			gl.activeTexture(register);
-			checkError();
-			gl.bindTexture(gl.TEXTURE_2D, texture);
-			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			checkError();
-
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0, // mip level
-				gl.LUMINANCE, // internal format
-				width,
-				height,
-				0, // border
-				gl.LUMINANCE, // format
-				gl.UNSIGNED_BYTE, //type
-				data // data!
-			);
-			checkError();
-
-			return texture;
+			return textures[name];
 		}
 
-		function init(buffer) {
-			vertexShader = compileShader(gl.VERTEX_SHADER, shaders.vertex);
-			fragmentShader = compileShader(gl.FRAGMENT_SHADER, shaders.fragment);
+		function uploadTexture(name, width, height, data) {
+			var texture = createOrReuseTexture(name);
+			if (WebGLFrameSink.stripe) {
+				// Upload to a temporary RGBA texture, then unpack it.
+				// This is faster than CPU-side swizzling in ANGLE on Windows.
+				gl.useProgram(unpackProgram);
+				var fb = fb = framebuffers[name];
 
-			program = gl.createProgram();
+				if (!fb) {
+					// Create a framebuffer and an empty target size
+					gl.activeTexture(gl.TEXTURE0);
+					gl.bindTexture(gl.TEXTURE_2D, texture);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						0, // mip level
+						gl.RGBA, // internal format
+						width,
+						height,
+						0, // border
+						gl.RGBA, // format
+						gl.UNSIGNED_BYTE, //type
+						null // data!
+					);
+
+					fb = framebuffers[name] = gl.createFramebuffer();
+				}
+				gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+
+				var tempTexture = createOrReuseTexture(name + '_temp');
+				gl.activeTexture(gl.TEXTURE1);
+				gl.bindTexture(gl.TEXTURE_2D, tempTexture);
+				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uTexture'), 1);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0, // mip level
+					gl.RGBA, // internal format
+					width / 4,
+					height,
+					0, // border
+					gl.RGBA, // format
+					gl.UNSIGNED_BYTE, //type
+					data // data!
+				);
+
+				var stripeTexture = createOrReuseTexture(name + '_stripe');
+				gl.activeTexture(gl.TEXTURE2);
+				gl.bindTexture(gl.TEXTURE_2D, stripeTexture);
+				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uStripe'), 2);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0, // mip level
+					gl.RGBA, // internal format
+					width,
+					1,
+					0, // border
+					gl.RGBA, // format
+					gl.UNSIGNED_BYTE, //type
+					buildStripe(width, 1) // data!
+				);
+
+				var buf = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+				gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
+
+				var positionLocation = gl.getAttribLocation(unpackProgram, 'aPosition');
+				gl.enableVertexAttribArray(positionLocation);
+				gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+				// Set up the texture geometry...
+				var textureRectangle = new Float32Array([
+					0, 0,
+					1, 0,
+					0, 1,
+					0, 1,
+					1, 0,
+					1, 1
+				]);
+
+				var texturePositionBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, texturePositionBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, textureRectangle, gl.STATIC_DRAW);
+
+				var texturePositionLocation = gl.getAttribLocation(unpackProgram, 'aTexturePosition');
+				gl.enableVertexAttribArray(texturePositionLocation);
+				gl.vertexAttribPointer(texturePositionLocation, 2, gl.FLOAT, false, 0, 0);
+
+				// Draw into the target texture...
+				gl.viewport(0, 0, width, height);
+
+				gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	
+			} else {
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, texture);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0, // mip level
+					gl.LUMINANCE, // internal format
+					width,
+					height,
+					0, // border
+					gl.LUMINANCE, // format
+					gl.UNSIGNED_BYTE, //type
+					data // data!
+				);
+			}
+		}
+
+		function attachTexture(name, register, index) {
+			gl.activeTexture(register);
+			gl.bindTexture(gl.TEXTURE_2D, textures[name]);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+			gl.uniform1i(gl.getUniformLocation(program, name), index);
+		}
+
+		function buildStripe(width, height) {
+			var len = width * height,
+				out = new Uint32Array(len);
+			for (var i = 0; i < len; i += 4) {
+				out[i    ] = 0x000000ff;
+				out[i + 1] = 0x0000ff00;
+				out[i + 2] = 0x00ff0000;
+				out[i + 3] = 0xff000000;
+			}
+			return new Uint8Array(out.buffer);
+		}
+
+		function initProgram(vertexShaderSource, fragmentShaderSource) {
+			var vertexShader = compileShader(gl.VERTEX_SHADER, vertexShaderSource);
+			var fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+			var program = gl.createProgram();
 			gl.attachShader(program, vertexShader);
-			checkError();
-
 			gl.attachShader(program, fragmentShader);
-			checkError();
 
 			gl.linkProgram(program);
 			if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
@@ -146,8 +258,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				throw new Error('GL program linking failed: ' + err);
 			}
 
-			gl.useProgram(program);
-			checkError();
+			return program;
+		}
+
+		function init() {
+			if (WebGLFrameSink.stripe) {
+				unpackProgram = initProgram(shaders.vertexStripe, shaders.fragmentStripe);
+			}
+			program = initProgram(shaders.vertex, shaders.fragment);
 		}
 
 		/**
@@ -165,32 +283,31 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			}
 
 			if (!program) {
-				init(buffer);
+				init();
 			}
 
+			// Create the textures...
+			// If using stripe mode this may switch program during upload!
+			uploadTexture('uTextureY', buffer.y.stride, format.height, buffer.y.bytes);
+			uploadTexture('uTextureCb', buffer.u.stride, format.chromaHeight, buffer.u.bytes);
+			uploadTexture('uTextureCr', buffer.v.stride, format.chromaHeight, buffer.v.bytes);
+
 			// Set up the rectangle and draw it
+			gl.useProgram(program);
+			gl.viewport(0, 0, canvas.width, canvas.height);
 
-			//
+			attachTexture('uTextureY', gl.TEXTURE0, 0);
+			attachTexture('uTextureCb', gl.TEXTURE1, 1);
+			attachTexture('uTextureCr', gl.TEXTURE2, 2);
+
 			// Set up geometry
-			//
-
-			buf = gl.createBuffer();
-			checkError();
-
+			var buf = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-			checkError();
-
 			gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
-			checkError();
 
 			var positionLocation = gl.getAttribLocation(program, 'aPosition');
-			checkError();
-
 			gl.enableVertexAttribArray(positionLocation);
-			checkError();
-
 			gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-			checkError();
 
 
 			// Set up the texture geometry...
@@ -211,52 +328,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 				var texturePositionBuffer = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, texturePositionBuffer);
-				checkError();
-
 				gl.bufferData(gl.ARRAY_BUFFER, textureRectangle, gl.STATIC_DRAW);
-				checkError();
 
 				var texturePositionLocation = gl.getAttribLocation(program, varname);
-				checkError();
-
 				gl.enableVertexAttribArray(texturePositionLocation);
-				checkError();
-
 				gl.vertexAttribPointer(texturePositionLocation, 2, gl.FLOAT, false, 0, 0);
-				checkError();
 			}
 			setupTexturePosition('aLumaPosition', buffer.y.stride);
 			setupTexturePosition('aChromaPosition', buffer.u.stride * format.width / format.chromaWidth);
 
-			// Create the textures...
-			var textureY = attachTexture(
-				'uTextureY',
-				gl.TEXTURE0,
-				0,
-				buffer.y.stride,
-				format.height,
-				buffer.y.bytes
-			);
-			var textureCb = attachTexture(
-				'uTextureCb',
-				gl.TEXTURE1,
-				1,
-				buffer.u.stride,
-				format.chromaHeight,
-				buffer.u.bytes
-			);
-			var textureCr = attachTexture(
-				'uTextureCr',
-				gl.TEXTURE2,
-				2,
-				buffer.v.stride,
-				format.chromaHeight,
-				buffer.v.bytes
-			);
-
 			// Aaaaand draw stuff.
 			gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
-			checkError();
+			
+			gl.getError();
 		};
 
 		self.clear = function() {
