@@ -56,10 +56,9 @@ in IE 11 update 1 and Edge uploading is unexpectedly slow. In fact, luminance
 and alpha textures seem consistently slow on Windows even in Chrome and Firefox,
 possibly due to a mismatch in interfaces between WebGL and Direct3D.
 
-Early versions of yuv-canvas packed the data into RGBA textures for faster
-texture upload, but this produced bad output when scaling. As of 1.1, all
-OSs use the luminance textures, and the early IE 11 versions will use software
-rendering.
+On Windows, the textures are uploaded as packed RGBA textures, then unpacked
+to luminance textures on the GPU. This has a small runtime cost, but seems
+less than the cost of letting the ANGLE layer in the browser swizzle.
 
 #Usage
 

@@ -663,12 +663,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				// Upload to a temporary RGBA texture, then unpack it.
 				// This is faster than CPU-side swizzling in ANGLE on Windows.
 				gl.useProgram(unpackProgram);
+				var fb = fb = framebuffers[name];
 
-				if (!framebuffers[name]) {
+				if (!fb) {
 					// Create a framebuffer and an empty target size
-					framebuffers[name] = gl.createFramebuffer();
 					gl.activeTexture(gl.TEXTURE0);
 					gl.bindTexture(gl.TEXTURE_2D, texture);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 					gl.texImage2D(
 						gl.TEXTURE_2D,
 						0, // mip level
@@ -680,12 +684,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						gl.UNSIGNED_BYTE, //type
 						null // data!
 					);
+
+					fb = framebuffers[name] = gl.createFramebuffer();
 				}
+				gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
 				var tempTexture = createOrReuseTexture(name + '_temp');
-				gl.activeTexture(gl.TEXTURE0);
+				gl.activeTexture(gl.TEXTURE1);
 				gl.bindTexture(gl.TEXTURE_2D, tempTexture);
-				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uTexture'), 0);
+				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uTexture'), 1);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -703,9 +711,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				);
 
 				var stripeTexture = createOrReuseTexture(name + '_stripe');
-				gl.activeTexture(gl.TEXTURE1);
+				gl.activeTexture(gl.TEXTURE2);
 				gl.bindTexture(gl.TEXTURE_2D, stripeTexture);
-				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uStripe'), 1);
+				gl.uniform1i(gl.getUniformLocation(unpackProgram, 'uStripe'), 2);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -726,7 +734,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 				gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
 
-				var positionLocation = gl.getAttribLocation(program, 'aPosition');
+				var positionLocation = gl.getAttribLocation(unpackProgram, 'aPosition');
 				gl.enableVertexAttribArray(positionLocation);
 				gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
@@ -749,9 +757,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.vertexAttribPointer(texturePositionLocation, 2, gl.FLOAT, false, 0, 0);
 
 				// Draw into the target texture...
-				var fb = framebuffers[name];
-				gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+				gl.viewport(0, 0, width, height);
 
 				gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
 
@@ -767,11 +773,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				gl.texImage2D(
 					gl.TEXTURE_2D,
 					0, // mip level
-					gl.LINEAR, // internal format
+					gl.LUMINANCE, // internal format
 					width,
 					height,
 					0, // border
-					gl.LINEAR, // format
+					gl.LUMINANCE, // format
 					gl.UNSIGNED_BYTE, //type
 					data // data!
 				);
@@ -779,9 +785,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		}
 
 		function attachTexture(name, register, index) {
-			gl.uniform1i(gl.getUniformLocation(program, name), index);
 			gl.activeTexture(register);
 			gl.bindTexture(gl.TEXTURE_2D, textures[name]);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+			gl.uniform1i(gl.getUniformLocation(program, name), index);
 		}
 
 		function buildStripe(width, height) {
@@ -842,11 +853,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			// Create the textures...
 			// If using stripe mode this may switch program during upload!
 			uploadTexture('uTextureY', buffer.y.stride, format.height, buffer.y.bytes);
-			uploadTexture('uTextureU', buffer.u.stride, format.chromaHeight, buffer.u.bytes);
-			uploadTexture('uTextureV', buffer.v.stride, format.chromaHeight, buffer.v.bytes);
+			uploadTexture('uTextureCb', buffer.u.stride, format.chromaHeight, buffer.u.bytes);
+			uploadTexture('uTextureCr', buffer.v.stride, format.chromaHeight, buffer.v.bytes);
 
 			// Set up the rectangle and draw it
 			gl.useProgram(program);
+			gl.viewport(0, 0, canvas.width, canvas.height);
+
+			attachTexture('uTextureY', gl.TEXTURE0, 0);
+			attachTexture('uTextureCb', gl.TEXTURE1, 1);
+			attachTexture('uTextureCr', gl.TEXTURE2, 2);
 
 			// Set up geometry
 			var buf = gl.createBuffer();
@@ -884,15 +900,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			}
 			setupTexturePosition('aLumaPosition', buffer.y.stride);
 			setupTexturePosition('aChromaPosition', buffer.u.stride * format.width / format.chromaWidth);
-			
-			attachTexture('uTextureY', gl.TEXTURE0, 0);
-			attachTexture('uTextureU', gl.TEXTURE1, 1);
-			attachTexture('uTextureV', gl.TEXTURE2, 2);
 
 			// Aaaaand draw stuff.
 			gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
-			
-			gl.getError();
 		};
 
 		self.clear = function() {
@@ -905,6 +915,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 		return self;
 	}
+
+	// For Windows; luminance and alpha textures are ssllooww to upload,
+	// so we pack into RGBA and unpack in the shaders.
+	//
+	// This seems to affect all browsers on Windows, probably due to fun
+	// mismatches between GL and D3D.
+	WebGLFrameSink.stripe = (function() {
+		if (navigator.userAgent.indexOf('Windows') !== -1) {
+			return true;
+		}
+		return false;
+	})();
 
 	/**
 	 * Static function to check if WebGL will be available with appropriate features.
@@ -932,9 +954,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				height = 4,
 				texture = gl.createTexture(),
 				data = new Uint8Array(width * height),
-				texWidth = width,
-				format = gl.LUMINANCE,
-				filter = gl.LINEAR;
+				texWidth = WebGLFrameSink.stripe ? (width / 4) : width,
+				format = WebGLFrameSink.stripe ? gl.RGBA : gl.LUMINANCE,
+				filter = WebGLFrameSink.stripe ? gl.NEAREST : gl.LINEAR;
 
 			gl.activeTexture(register);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
