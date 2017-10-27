@@ -1,6 +1,7 @@
 // inspired by https://github.com/mbebenita/Broadway/blob/master/Player/canvas.js
 
-precision mediump float;
+precision lowp float;
+
 uniform sampler2D uTextureY;
 uniform sampler2D uTextureCb;
 uniform sampler2D uTextureCr;

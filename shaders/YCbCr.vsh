@@ -1,3 +1,5 @@
+precision lowp float;
+
 attribute vec2 aPosition;
 attribute vec2 aLumaPosition;
 attribute vec2 aChromaPosition;
