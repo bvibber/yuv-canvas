@@ -85,6 +85,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 		var textures = {};
 		var framebuffers = {};
+		var stripes = {};
+		var buf, positionLocation, unpackPositionLocation;
+		var unpackTexturePositionBuffer, unpackTexturePositionLocation;
+		var lumaPositionBuffer, lumaPositionLocation;
+		var chromaPositionBuffer, chromaPositionLocation;
 
 		function createOrReuseTexture(name) {
 			if (!textures[name]) {
@@ -99,7 +104,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				// Upload to a temporary RGBA texture, then unpack it.
 				// This is faster than CPU-side swizzling in ANGLE on Windows.
 				gl.useProgram(unpackProgram);
-				var fb = fb = framebuffers[name];
+				var fb = framebuffers[name];
 
 				if (!fb) {
 					// Create a framebuffer and an empty target size
@@ -172,11 +177,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					);
 				}
 
-				var buf = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 				gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
 
-				var positionLocation = gl.getAttribLocation(unpackProgram, 'aPosition');
 				gl.enableVertexAttribArray(positionLocation);
 				gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
@@ -190,13 +193,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					1, 1
 				]);
 
-				var texturePositionBuffer = gl.createBuffer();
-				gl.bindBuffer(gl.ARRAY_BUFFER, texturePositionBuffer);
+				gl.bindBuffer(gl.ARRAY_BUFFER, unpackTexturePositionBuffer);
 				gl.bufferData(gl.ARRAY_BUFFER, textureRectangle, gl.STATIC_DRAW);
 
-				var texturePositionLocation = gl.getAttribLocation(unpackProgram, 'aTexturePosition');
-				gl.enableVertexAttribArray(texturePositionLocation);
-				gl.vertexAttribPointer(texturePositionLocation, 2, gl.FLOAT, false, 0, 0);
+				gl.enableVertexAttribArray(unpackTexturePositionLocation);
+				gl.vertexAttribPointer(unpackTexturePositionLocation, 2, gl.FLOAT, false, 0, 0);
 
 				// Draw into the target texture...
 				gl.viewport(0, 0, width, height);
@@ -237,8 +238,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			gl.uniform1i(gl.getUniformLocation(program, name), index);
 		}
 
-		var stripes = {};
-
 		function buildStripe(width) {
 			if (stripes[width]) {
 				return stripes[width];
@@ -275,8 +274,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		function init() {
 			if (WebGLFrameSink.stripe) {
 				unpackProgram = initProgram(shaders.vertexStripe, shaders.fragmentStripe);
+				unpackPositionLocation = gl.getAttribLocation(unpackProgram, 'aPosition');
+				unpackTexturePositionBuffer = gl.createBuffer();
+				unpackTexturePositionLocation = gl.getAttribLocation(unpackProgram, 'aTexturePosition');
 			}
 			program = initProgram(shaders.vertex, shaders.fragment);
+			buf = gl.createBuffer();
+			positionLocation = gl.getAttribLocation(program, 'aPosition');
+			lumaPositionBuffer = gl.createBuffer();
+			lumaPositionLocation = gl.getAttribLocation(program, 'aLumaPosition');
+			chromaPositionBuffer = gl.createBuffer();
+			chromaPositionLocation = gl.getAttribLocation(program, 'aChromaPosition');
 		}
 
 		/**
@@ -312,17 +320,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			attachTexture('uTextureCr', gl.TEXTURE2, 2);
 
 			// Set up geometry
-			var buf = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 			gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
 
-			var positionLocation = gl.getAttribLocation(program, 'aPosition');
 			gl.enableVertexAttribArray(positionLocation);
 			gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
 
 			// Set up the texture geometry...
-			function setupTexturePosition(varname, texWidth) {
+			function setupTexturePosition(buffer, location, texWidth) {
 				// Warning: assumes that the stride for Cb and Cr is the same size in output pixels
 				var textureX0 = format.cropLeft / texWidth;
 				var textureX1 = (format.cropLeft + format.cropWidth) / texWidth;
@@ -337,16 +343,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					textureX1, textureY1
 				]);
 
-				var texturePositionBuffer = gl.createBuffer();
-				gl.bindBuffer(gl.ARRAY_BUFFER, texturePositionBuffer);
+				gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 				gl.bufferData(gl.ARRAY_BUFFER, textureRectangle, gl.STATIC_DRAW);
 
-				var texturePositionLocation = gl.getAttribLocation(program, varname);
-				gl.enableVertexAttribArray(texturePositionLocation);
-				gl.vertexAttribPointer(texturePositionLocation, 2, gl.FLOAT, false, 0, 0);
+				gl.enableVertexAttribArray(location);
+				gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0);
 			}
-			setupTexturePosition('aLumaPosition', buffer.y.stride);
-			setupTexturePosition('aChromaPosition', buffer.u.stride * format.width / format.chromaWidth);
+			setupTexturePosition(
+				lumaPositionBuffer,
+				lumaPositionLocation,
+				buffer.y.stride);
+			setupTexturePosition(
+				chromaPositionBuffer,
+				chromaPositionLocation,
+				buffer.u.stride * format.width / format.chromaWidth);
 
 			// Aaaaand draw stuff.
 			gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
