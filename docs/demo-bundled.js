@@ -650,10 +650,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 		var textures = {};
 		function attachTexture(name, register, index, width, height, data) {
-			var texture,
-				texWidth = WebGLFrameSink.stripe ? (width / 4) : width,
-				format = WebGLFrameSink.stripe ? gl.RGBA : gl.LUMINANCE,
-				filter = WebGLFrameSink.stripe ? gl.NEAREST : gl.LINEAR;
+			var texture;
 
 			if (textures[name]) {
 				// Reuse & update the existing texture
@@ -673,19 +670,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			checkError();
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 			checkError();
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			checkError();
 
 			gl.texImage2D(
 				gl.TEXTURE_2D,
 				0, // mip level
-				format, // internal format
-				texWidth,
+				gl.LUMINANCE, // internal format
+				width,
 				height,
 				0, // border
-				format, // format
+				gl.LUMINANCE, // format
 				gl.UNSIGNED_BYTE, //type
 				data // data!
 			);
@@ -694,25 +691,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			return texture;
 		}
 
-		function buildStripe(width, height) {
-			var len = width * height,
-				out = new Uint32Array(len);
-			for (var i = 0; i < len; i += 4) {
-				out[i    ] = 0x000000ff;
-				out[i + 1] = 0x0000ff00;
-				out[i + 2] = 0x00ff0000;
-				out[i + 3] = 0xff000000;
-			}
-			return new Uint8Array(out.buffer);
-		}
-
 		function init(buffer) {
 			vertexShader = compileShader(gl.VERTEX_SHADER, shaders.vertex);
-			if (WebGLFrameSink.stripe) {
-				fragmentShader = compileShader(gl.FRAGMENT_SHADER, shaders.fragmentStripe);
-			} else {
-				fragmentShader = compileShader(gl.FRAGMENT_SHADER, shaders.fragment);
-			}
+			fragmentShader = compileShader(gl.FRAGMENT_SHADER, shaders.fragment);
 
 			program = gl.createProgram();
 			gl.attachShader(program, vertexShader);
@@ -730,28 +711,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			gl.useProgram(program);
 			checkError();
-
-			if (WebGLFrameSink.stripe) {
-				attachTexture(
-					'uStripeLuma',
-					gl.TEXTURE3,
-					3,
-					buffer.y.stride * 4,
-					buffer.format.height,
-					buildStripe(buffer.y.stride, buffer.format.height)
-				);
-				checkError();
-
-				attachTexture(
-					'uStripeChroma',
-					gl.TEXTURE4,
-					4,
-					buffer.u.stride * 4,
-					buffer.format.chromaHeight,
-					buildStripe(buffer.u.stride, buffer.format.chromaHeight)
-				);
-				checkError();
-			}
 		}
 
 		/**
@@ -874,18 +833,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		return self;
 	}
 
-	// For Windows; luminance and alpha textures are ssllooww to upload,
-	// so we pack into RGBA and unpack in the shaders.
-	//
-	// This seems to affect all browsers on Windows, probably due to fun
-	// mismatches between GL and D3D.
-	WebGLFrameSink.stripe = (function() {
-		if (navigator.userAgent.indexOf('Windows') !== -1) {
-			return true;
-		}
-		return false;
-	})();
-
 	/**
 	 * Static function to check if WebGL will be available with appropriate features.
 	 *
@@ -912,9 +859,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				height = 4,
 				texture = gl.createTexture(),
 				data = new Uint8Array(width * height),
-				texWidth = WebGLFrameSink.stripe ? (width / 4) : width,
-				format = WebGLFrameSink.stripe ? gl.RGBA : gl.LUMINANCE,
-				filter = WebGLFrameSink.stripe ? gl.NEAREST : gl.LINEAR;
+				texWidth = width,
+				format = gl.LUMINANCE,
+				filter = gl.LINEAR;
 
 			gl.activeTexture(register);
 			gl.bindTexture(gl.TEXTURE_2D, texture);

@@ -6,13 +6,16 @@ and colorspace conversion.
 
 #Copyright
 
-Copyright 2014-2016 by Brion Vibber <brion@pobox.com>
+Copyright 2014-2017 by Brion Vibber <brion@pobox.com>
 MIT license, see the source files:
 
 * Source: https://github.com/brion/yuv-canvas
 * Issues: https://github.com/brion/yuv-canvas/issues
 
 #Updates
+
+1.1.0 - 2017-10-27
+* improved scaling/filtering on Windows (dropped "stripe" optimization)
 
 1.0.1 - 2017-02-17
 * fix flickering in Safari with software rendering
@@ -42,18 +45,18 @@ WebGL initialization fails.
 
 ##Windows vs luminance textures
 
-On most operating systems, the Y, U and V planes are uploaded as luminance
-textures, then combined into RGB output by a shader.
+The Y, U and V planes are uploaded as luminance textures, then combined into
+RGB output by a shader.
 
 Early versions of IE 11 do not support luminance or alpha textures at all, and
 in IE 11 update 1 and Edge uploading is unexpectedly slow. In fact, luminance
 and alpha textures seem consistently slow on Windows even in Chrome and Firefox,
 possibly due to a mismatch in interfaces between WebGL and Direct3D.
 
-As a workaround, on Windows the data is packed into RGBA textures for faster
-texture upload and unpacked in the shader. This performs more consistently, but
-disables filtering and may cause visual glitches on files that have a
-non-default aspect ratio.
+Early versions of yuv-canvas packed the data into RGBA textures for faster
+texture upload, but this produced bad output when scaling. As of 1.1, all
+OSs use the luminance textures, and the early IE 11 versions will use software
+rendering.
 
 #Usage
 
