@@ -22,8 +22,11 @@ module.exports = function(grunt) {
           from: 'YCBCR_FRAGMENT_SHADER',
           to: stringify('./shaders/YCbCr.fsh')
         }, {
+          from: 'YCBCR_STRIPE_VERTEX_SHADER',
+          to: stringify('./shaders/unpack-stripe.vsh')
+        }, {
           from: 'YCBCR_STRIPE_FRAGMENT_SHADER',
-          to: stringify('./shaders/YCbCr-stripe.fsh')
+          to: stringify('./shaders/unpack-stripe.fsh')
         }]
       }
     },
