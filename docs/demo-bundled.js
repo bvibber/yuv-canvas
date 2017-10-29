@@ -102,8 +102,22 @@ module.exports = {
     yuvCanvas.drawFrame(frame);
   }
 
+  function setupBenchmark() {
+    document.getElementById('benchmark').addEventListener('click', function() {
+     var rounds = 1000,
+       start = Date.now();
+     for (var i = 0; i < rounds; i++) {
+       yuvCanvas.drawFrame(frame);
+     }
+     var delta = (Date.now() - start) / 1000;
+     var fps = rounds / delta;
+     document.getElementById('fps').innerText = fps + 'fps';
+    });
+  }
+
   setupFrame();
   setupSources();
+  setupBenchmark();
 
 })();
 
