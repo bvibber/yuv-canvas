@@ -14,6 +14,9 @@ MIT license, see the source files:
 
 #Updates
 
+1.2.1 - 2018-01-18
+* fix regression breaking iOS 9
+
 1.2.0 - 2017-10-27
 * optimized Windows rendering (restored "stripe" more cleanly)
 * retooled rendering order to minimize CPU/GPU sync points

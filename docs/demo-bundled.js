@@ -922,7 +922,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			}
 
 			if (formatUpdate) {
-				function setupTexturePosition(buffer, location, texWidth) {
+				var setupTexturePosition = function(buffer, location, texWidth) {
 					// Warning: assumes that the stride for Cb and Cr is the same size in output pixels
 					var textureX0 = format.cropLeft / texWidth;
 					var textureX1 = (format.cropLeft + format.cropWidth) / texWidth;
@@ -939,7 +939,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 					gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 					gl.bufferData(gl.ARRAY_BUFFER, textureRectangle, gl.STATIC_DRAW);
-				}
+				};
 				setupTexturePosition(
 					lumaPositionBuffer,
 					lumaPositionLocation,
