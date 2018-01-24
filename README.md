@@ -46,8 +46,8 @@ Accelerated YCbCr->RGB conversion and drawing is done using WebGL on supporting
 browsers (Firefox, Chrome, IE 11, Edge, and Safari for iOS 8 & OS X 10.9), and
 is enabled by default if available.
 
-Caller can pass the 'disableWebGL: false' key to options to force use of the
-software conversion and 2d canvas, or 'forceWebGL: true' to force a failure if
+Caller can pass the 'webGL: false' key to options to force use of the
+software conversion and 2d canvas, or 'webGL: true' to force a failure if
 WebGL initialization fails.
 
 ##Windows vs luminance textures
