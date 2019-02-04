@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports = {
   vertex: "precision lowp float;\n\nattribute vec2 aPosition;\nattribute vec2 aLumaPosition;\nattribute vec2 aChromaPosition;\nvarying vec2 vLumaPosition;\nvarying vec2 vChromaPosition;\nvoid main() {\n    gl_Position = vec4(aPosition, 0, 1);\n    vLumaPosition = aLumaPosition;\n    vChromaPosition = aChromaPosition;\n}\n",
   fragment: "// inspired by https://github.com/mbebenita/Broadway/blob/master/Player/canvas.js\n\nprecision lowp float;\n\nuniform sampler2D uTextureY;\nuniform sampler2D uTextureCb;\nuniform sampler2D uTextureCr;\nvarying vec2 vLumaPosition;\nvarying vec2 vChromaPosition;\nvoid main() {\n   // Y, Cb, and Cr planes are uploaded as LUMINANCE textures.\n   float fY = texture2D(uTextureY, vLumaPosition).x;\n   float fCb = texture2D(uTextureCb, vChromaPosition).x;\n   float fCr = texture2D(uTextureCr, vChromaPosition).x;\n\n   // Premultipy the Y...\n   float fYmul = fY * 1.1643828125;\n\n   // And convert that to RGB!\n   gl_FragColor = vec4(\n     fYmul + 1.59602734375 * fCr - 0.87078515625,\n     fYmul - 0.39176171875 * fCb - 0.81296875 * fCr + 0.52959375,\n     fYmul + 2.017234375   * fCb - 1.081390625,\n     1\n   );\n}\n",
@@ -610,7 +610,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	 */
 	function WebGLFrameSink(canvas) {
 		var self = this,
-			gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl'),
+			gl = WebGLFrameSink.contextForCanvas(canvas),
 			debug = false; // swap this to enable more error checks, which can slow down rendering
 
 		if (gl === null) {
@@ -1011,6 +1011,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		return false;
 	})();
 
+	WebGLFrameSink.contextForCanvas = function(canvas) {
+		var options = {
+			// Turn off things we don't need
+			alpha: false,
+			depth: false,
+			stencil: false,
+			antialias: false,
+			// Don't trigger discrete GPU in multi-GPU systems
+			preferLowPowerToHighPerformance: true,
+			// Don't try to use software GL rendering!
+			failIfMajorPerformanceCaveat: true
+		};
+		return canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
+	};
+
 	/**
 	 * Static function to check if WebGL will be available with appropriate features.
 	 *
@@ -1021,20 +1036,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			gl;
 		canvas.width = 1;
 		canvas.height = 1;
-		var options = {
-			// Turn off things we don't need
-			alpha: false,
-			depth: false,
-			stencil: false,
-			antialias: false,
-			preferLowPowerToHighPerformance: true
-
-			// Still dithering on whether to use this.
-			// Recommend avoiding it, as it's overly conservative
-			//failIfMajorPerformanceCaveat: true
-		};
 		try {
-			gl = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
+			gl = WebGLFrameSink.contextForCanvas(canvas);
 		} catch (e) {
 			return false;
 		}

@@ -32,7 +32,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	 */
 	function WebGLFrameSink(canvas) {
 		var self = this,
-			gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl'),
+			gl = WebGLFrameSink.contextForCanvas(canvas),
 			debug = false; // swap this to enable more error checks, which can slow down rendering
 
 		if (gl === null) {
@@ -433,6 +433,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		return false;
 	})();
 
+	WebGLFrameSink.contextForCanvas = function(canvas) {
+		var options = {
+			// Turn off things we don't need
+			alpha: false,
+			depth: false,
+			stencil: false,
+			antialias: false,
+			// Don't trigger discrete GPU in multi-GPU systems
+			preferLowPowerToHighPerformance: true,
+			// Don't try to use software GL rendering!
+			failIfMajorPerformanceCaveat: true
+		};
+		return canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
+	};
+
 	/**
 	 * Static function to check if WebGL will be available with appropriate features.
 	 *
@@ -443,20 +458,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			gl;
 		canvas.width = 1;
 		canvas.height = 1;
-		var options = {
-			// Turn off things we don't need
-			alpha: false,
-			depth: false,
-			stencil: false,
-			antialias: false,
-			preferLowPowerToHighPerformance: true
-
-			// Still dithering on whether to use this.
-			// Recommend avoiding it, as it's overly conservative
-			//failIfMajorPerformanceCaveat: true
-		};
 		try {
-			gl = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
+			gl = WebGLFrameSink.contextForCanvas(canvas);
 		} catch (e) {
 			return false;
 		}
