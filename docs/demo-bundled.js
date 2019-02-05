@@ -1088,7 +1088,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 },{"../build/shaders.js":1,"./FrameSink.js":4}],7:[function(require,module,exports){
 /*
-Copyright (c) 2014-2016 Brion Vibber <brion@pobox.com>
+Copyright (c) 2014-2019 Brion Vibber <brion@pobox.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -1116,7 +1116,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	 * Basic YCbCr->RGB conversion
 	 *
 	 * @author Brion Vibber <brion@pobox.com>
-	 * @copyright 2014-2016
+	 * @copyright 2014-2019
 	 * @license MIT-style
 	 *
 	 * @param {YUVFrame} buffer - input frame buffer
@@ -1124,17 +1124,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	 * Assumes that the output array already has alpha channel set to opaque.
 	 */
 	function convertYCbCr(buffer, output) {
-		var width = buffer.format.width,
-			height = buffer.format.height,
-			hdec = depower(buffer.format.width / buffer.format.chromaWidth),
-			vdec = depower(buffer.format.height / buffer.format.chromaHeight),
+		var width = buffer.format.width | 0,
+			height = buffer.format.height | 0,
+			hdec = depower(buffer.format.width / buffer.format.chromaWidth) | 0,
+			vdec = depower(buffer.format.height / buffer.format.chromaHeight) | 0,
 			bytesY = buffer.y.bytes,
 			bytesCb = buffer.u.bytes,
 			bytesCr = buffer.v.bytes,
-			strideY = buffer.y.stride,
-			strideCb = buffer.u.stride,
-			strideCr = buffer.v.stride,
-			outStride = 4 * width,
+			strideY = buffer.y.stride | 0,
+			strideCb = buffer.u.stride | 0,
+			strideCr = buffer.v.stride | 0,
+			outStride = width << 2,
 			YPtr = 0, Y0Ptr = 0, Y1Ptr = 0,
 			CbPtr = 0, CrPtr = 0,
 			outPtr = 0, outPtr0 = 0, outPtr1 = 0,
@@ -1148,44 +1148,44 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			outPtr1 = outStride;
 			ydec = 0;
 			for (y = 0; y < height; y += 2) {
-				Y0Ptr = y * strideY;
-				Y1Ptr = Y0Ptr + strideY;
-				CbPtr = ydec * strideCb;
-				CrPtr = ydec * strideCr;
+				Y0Ptr = y * strideY | 0;
+				Y1Ptr = Y0Ptr + strideY | 0;
+				CbPtr = ydec * strideCb | 0;
+				CrPtr = ydec * strideCr | 0;
 				for (x = 0; x < width; x += 2) {
-					colorCb = bytesCb[CbPtr++];
-					colorCr = bytesCr[CrPtr++];
+					colorCb = bytesCb[CbPtr++] | 0;
+					colorCr = bytesCr[CrPtr++] | 0;
 
 					// Quickie YUV conversion
 					// https://en.wikipedia.org/wiki/YCbCr#ITU-R_BT.2020_conversion
 					// multiplied by 256 for integer-friendliness
-					multCrR   = (409 * colorCr) - 57088;
-					multCbCrG = (100 * colorCb) + (208 * colorCr) - 34816;
-					multCbB   = (516 * colorCb) - 70912;
+					multCrR   = (409 * colorCr | 0) - 57088 | 0;
+					multCbCrG = (100 * colorCb | 0) + (208 * colorCr | 0) - 34816 | 0;
+					multCbB   = (516 * colorCb | 0) - 70912 | 0;
 
-					multY = (298 * bytesY[Y0Ptr++]);
-					output[outPtr0++] = (multY + multCrR) >> 8;
-					output[outPtr0++] = (multY - multCbCrG) >> 8;
-					output[outPtr0++] = (multY + multCbB) >> 8;
-					outPtr0++;
+					multY = 298 * bytesY[Y0Ptr++] | 0;
+					output[outPtr0    ] = (multY + multCrR) >> 8;
+					output[outPtr0 + 1] = (multY - multCbCrG) >> 8;
+					output[outPtr0 + 2] = (multY + multCbB) >> 8;
+					outPtr0 += 4;
 
-					multY = (298 * bytesY[Y0Ptr++]);
-					output[outPtr0++] = (multY + multCrR) >> 8;
-					output[outPtr0++] = (multY - multCbCrG) >> 8;
-					output[outPtr0++] = (multY + multCbB) >> 8;
-					outPtr0++;
+					multY = 298 * bytesY[Y0Ptr++] | 0;
+					output[outPtr0    ] = (multY + multCrR) >> 8;
+					output[outPtr0 + 1] = (multY - multCbCrG) >> 8;
+					output[outPtr0 + 2] = (multY + multCbB) >> 8;
+					outPtr0 += 4;
 
-					multY = (298 * bytesY[Y1Ptr++]);
-					output[outPtr1++] = (multY + multCrR) >> 8;
-					output[outPtr1++] = (multY - multCbCrG) >> 8;
-					output[outPtr1++] = (multY + multCbB) >> 8;
-					outPtr1++;
+					multY = 298 * bytesY[Y1Ptr++] | 0;
+					output[outPtr1    ] = (multY + multCrR) >> 8;
+					output[outPtr1 + 1] = (multY - multCbCrG) >> 8;
+					output[outPtr1 + 2] = (multY + multCbB) >> 8;
+					outPtr1 += 4;
 
-					multY = (298 * bytesY[Y1Ptr++]);
-					output[outPtr1++] = (multY + multCrR) >> 8;
-					output[outPtr1++] = (multY - multCbCrG) >> 8;
-					output[outPtr1++] = (multY + multCbB) >> 8;
-					outPtr1++;
+					multY = 298 * bytesY[Y1Ptr++] | 0;
+					output[outPtr1    ] = (multY + multCrR) >> 8;
+					output[outPtr1 + 1] = (multY - multCbCrG) >> 8;
+					output[outPtr1 + 2] = (multY + multCbB) >> 8;
+					outPtr1 += 4;
 				}
 				outPtr0 += outStride;
 				outPtr1 += outStride;
@@ -1196,27 +1196,27 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			for (y = 0; y < height; y++) {
 				xdec = 0;
 				ydec = y >> vdec;
-				YPtr = y * strideY;
-				CbPtr = ydec * strideCb;
-				CrPtr = ydec * strideCr;
+				YPtr = y * strideY | 0;
+				CbPtr = ydec * strideCb | 0;
+				CrPtr = ydec * strideCr | 0;
 
 				for (x = 0; x < width; x++) {
 					xdec = x >> hdec;
-					colorCb = bytesCb[CbPtr + xdec];
-					colorCr = bytesCr[CrPtr + xdec];
+					colorCb = bytesCb[CbPtr + xdec] | 0;
+					colorCr = bytesCr[CrPtr + xdec] | 0;
 
 					// Quickie YUV conversion
 					// https://en.wikipedia.org/wiki/YCbCr#ITU-R_BT.2020_conversion
 					// multiplied by 256 for integer-friendliness
-					multCrR   = (409 * colorCr) - 57088;
-					multCbCrG = (100 * colorCb) + (208 * colorCr) - 34816;
-					multCbB   = (516 * colorCb) - 70912;
+					multCrR   = (409 * colorCr | 0) - 57088 | 0;
+					multCbCrG = (100 * colorCb | 0) + (208 * colorCr | 0) - 34816 | 0;
+					multCbB   = (516 * colorCb | 0) - 70912 | 0;
 
-					multY = 298 * bytesY[YPtr++];
-					output[outPtr++] = (multY + multCrR) >> 8;
-					output[outPtr++] = (multY - multCbCrG) >> 8;
-					output[outPtr++] = (multY + multCbB) >> 8;
-					outPtr++;
+					multY = 298 * bytesY[YPtr++] | 0;
+					output[outPtr    ] = (multY + multCrR) >> 8;
+					output[outPtr + 1] = (multY - multCbCrG) >> 8;
+					output[outPtr + 2] = (multY + multCbB) >> 8;
+					outPtr += 4;
 				}
 			}
 		}

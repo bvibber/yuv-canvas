@@ -14,6 +14,9 @@ MIT license, see the source files:
 
 # Updates
 
+1.2.3 - 2019-02-04
+* optimize software rendering path by a few percent
+
 1.2.2 - 2019-02-04
 * don't use WebGL when software rendering is in use (failIfMajorPerformanceCaveat)
 * fix use of preferLowPowerToHighPerformance for preferring integrated GPU
