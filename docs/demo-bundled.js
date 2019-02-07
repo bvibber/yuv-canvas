@@ -554,9 +554,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			// Draw cropped frame to either the final or temporary canvas
 			drawContext.putImageData(imageData,
-							         0, 0,
-											 format.cropLeft, format.cropTop,
-											 format.cropWidth, format.cropHeight);
+				-format.cropLeft, -format.cropTop, // must offset the offset
+				format.cropLeft, format.cropTop,
+				format.cropWidth, format.cropHeight);
 
 			if (resample) {
 				ctx.drawImage(resampleCanvas, 0, 0, format.displayWidth, format.displayHeight);

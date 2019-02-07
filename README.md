@@ -14,6 +14,9 @@ MIT license, see the source files:
 
 # Updates
 
+1.2.4 - 2019-02-06
+* fix software rendering path for crop offsets (Theora)
+
 1.2.3 - 2019-02-04
 * optimize software rendering path by a few percent
 
