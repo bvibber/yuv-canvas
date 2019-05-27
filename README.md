@@ -14,6 +14,9 @@ MIT license, see the source files:
 
 # Updates
 
+1.2.5 - 2019-05-27
+* remove some extra WebGL options that just slowed things down and could cause flicker in Safari during canvas video capture
+
 1.2.4 - 2019-02-06
 * fix software rendering path for crop offsets (Theora)
 

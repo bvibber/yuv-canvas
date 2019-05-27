@@ -435,11 +435,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 	WebGLFrameSink.contextForCanvas = function(canvas) {
 		var options = {
-			// Turn off things we don't need
-			alpha: false,
-			depth: false,
-			stencil: false,
-			antialias: false,
 			// Don't trigger discrete GPU in multi-GPU systems
 			preferLowPowerToHighPerformance: true,
 			// Don't try to use software GL rendering!
