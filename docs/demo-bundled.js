@@ -670,20 +670,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		var lumaPositionBuffer, lumaPositionLocation;
 		var chromaPositionBuffer, chromaPositionLocation;
 
-		function createOrReuseTexture(name) {
-			if (!textures[name]) {
+		function createOrReuseTexture(name, formatUpdate) {
+			if (!textures[name] || formatUpdate) {
 				textures[name] = gl.createTexture();
 			}
 			return textures[name];
 		}
 
-		function uploadTexture(name, width, height, data) {
-			var texture = createOrReuseTexture(name);
+		function uploadTexture(name, formatUpdate, width, height, data) {
+			var texture = createOrReuseTexture(name, formatUpdate);
 			gl.activeTexture(gl.TEXTURE0);
 
 			if (WebGLFrameSink.stripe) {
-				var uploadTemp = !textures[name + '_temp'];
-				var tempTexture = createOrReuseTexture(name + '_temp');
+				var uploadTemp = !textures[name + '_temp'] || formatUpdate;
+				var tempTexture = createOrReuseTexture(name + '_temp', formatUpdate);
 				gl.bindTexture(gl.TEXTURE_2D, tempTexture);
 				if (uploadTemp) {
 					// new texture
@@ -718,9 +718,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				}
 
 				var stripeTexture = textures[name + '_stripe'];
-				var uploadStripe = !stripeTexture;
+				var uploadStripe = !stripeTexture || formatUpdate;
 				if (uploadStripe) {
-					stripeTexture = createOrReuseTexture(name + '_stripe');
+					stripeTexture = createOrReuseTexture(name + '_stripe', formatUpdate);
 				}
 				gl.bindTexture(gl.TEXTURE_2D, stripeTexture);
 				if (uploadStripe) {
@@ -761,7 +761,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			}
 		}
 
-		function unpackTexture(name, width, height) {
+		function unpackTexture(name, formatUpdate, width, height) {
 			var texture = textures[name];
 
 			// Upload to a temporary RGBA texture, then unpack it.
@@ -769,7 +769,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			gl.useProgram(unpackProgram);
 
 			var fb = framebuffers[name];
-			if (!fb) {
+			if (!fb || formatUpdate) {
 				// Create a framebuffer and an empty target size
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -951,15 +951,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			}
 
 			// Create or update the textures...
-			uploadTexture('uTextureY', buffer.y.stride, format.height, buffer.y.bytes);
-			uploadTexture('uTextureCb', buffer.u.stride, format.chromaHeight, buffer.u.bytes);
-			uploadTexture('uTextureCr', buffer.v.stride, format.chromaHeight, buffer.v.bytes);
+			uploadTexture('uTextureY', formatUpdate, buffer.y.stride, format.height, buffer.y.bytes);
+			uploadTexture('uTextureCb', formatUpdate, buffer.u.stride, format.chromaHeight, buffer.u.bytes);
+			uploadTexture('uTextureCr', formatUpdate, buffer.v.stride, format.chromaHeight, buffer.v.bytes);
 
 			if (WebGLFrameSink.stripe) {
 				// Unpack the textures after upload to avoid blocking on GPU
-				unpackTexture('uTextureY', buffer.y.stride, format.height);
-				unpackTexture('uTextureCb', buffer.u.stride, format.chromaHeight);
-				unpackTexture('uTextureCr', buffer.v.stride, format.chromaHeight);
+				unpackTexture('uTextureY', formatUpdate, buffer.y.stride, format.height);
+				unpackTexture('uTextureCb', formatUpdate, buffer.u.stride, format.chromaHeight);
+				unpackTexture('uTextureCr', formatUpdate, buffer.v.stride, format.chromaHeight);
 			}
 
 			// Set up the rectangle and draw it
