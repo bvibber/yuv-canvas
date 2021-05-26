@@ -8,8 +8,8 @@
     "url": "https://github.com/brion/yuv-canvas.git"
   },
   "scripts": {
-    "build": "./node_modules/grunt/bin/grunt",
-    "test": "echo \"Open demo/demo.html in a browser.\" && exit 1",
+    "build": "grunt",
+    "start": "http-server ./docs/ && echo \"Open http://localhost:8080/demo.html in a browser.\"",
     "prepublish": "npm run-script build"
   },
   "keywords": [
@@ -28,6 +28,7 @@
     "grunt-browserify": "^5.3.0",
     "grunt-eslint": "^19.0.0",
     "grunt-text-replace": "^0.4.0",
+    "http-server": "^0.12.3",
     "yuv-buffer": "^1.0.0"
   }
 }
