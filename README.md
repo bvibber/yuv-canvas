@@ -6,13 +6,17 @@ and colorspace conversion.
 
 # Copyright
 
-Copyright 2014-2019 by Brion Vibber <brion@pobox.com>
+Copyright 2014-2021 by Brion Vibber <brion@pobox.com>
 MIT license, see the source files:
 
 * Source: https://github.com/brion/yuv-canvas
 * Issues: https://github.com/brion/yuv-canvas/issues
 
 # Updates
+
+1.2.7 - 2021-05-26
+* applied contributed patch updating texture state when frame size changes
+* added dev dep for running demo on http-server
 
 1.2.6 - 2019-05-27
 * added an extra WebGL option to preserve back buffer, fixes canvas video capture in Firefox
