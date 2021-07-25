@@ -3,6 +3,7 @@
   "version": "1.2.7",
   "description": "Utility for drawing YUV image data to HTML5 canvas",
   "main": "src/yuv-canvas.js",
+  "types": "yuv-canvas.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/brion/yuv-canvas.git"
