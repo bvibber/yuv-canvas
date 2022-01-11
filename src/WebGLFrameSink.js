@@ -421,17 +421,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		return self;
 	}
 
-	// For Windows; luminance and alpha textures are ssllooww to upload,
-	// so we pack into RGBA and unpack in the shaders.
+	// Optional performance hack for Windows; luminance and alpha textures are
+	// ssllooww to upload on some machines, so we pack into RGBA and unpack in
+	// the shaders.
 	//
 	// This seems to affect all browsers on Windows, probably due to fun
 	// mismatches between GL and D3D.
-	WebGLFrameSink.stripe = (function() {
-		if (navigator.userAgent.indexOf('Windows') !== -1) {
-			return true;
-		}
-		return false;
-	})();
+	//
+	// However as of 2022 it makes less difference than it did in 2014.
+	// Now disabled by default, may be removed entirely later. Force to 'true'
+	// before creating your instance to re-enable it for now.
+	WebGLFrameSink.stripe = false;
 
 	WebGLFrameSink.contextForCanvas = function(canvas) {
 		var options = {

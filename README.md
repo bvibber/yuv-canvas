@@ -14,6 +14,9 @@ MIT license, see the source files:
 
 # Updates
 
+1.2.8 - 2022-01-11
+* disabled "stripe" texture hack for Windows by default; uses deprecated userAgent, and makes little difference in 2022 vs 2014
+
 1.2.7 - 2021-05-26
 * applied contributed patch updating texture state when frame size changes
 * added dev dep for running demo on http-server
