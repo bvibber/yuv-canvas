@@ -6,13 +6,16 @@ and colorspace conversion.
 
 # Copyright
 
-Copyright 2014-2021 by Brion Vibber <brion@pobox.com>
+Copyright 2014-2022 by Brion Vibber <brion@pobox.com>
 MIT license, see the source files:
 
 * Source: https://github.com/brion/yuv-canvas
 * Issues: https://github.com/brion/yuv-canvas/issues
 
 # Updates
+
+1.2.9 - 2022-01-27
+* re-enabled "stripe" hack, but now by default everywhere. Turns out it makes a huge difference on macOS with some AMD GPUs too!
 
 1.2.8 - 2022-01-11
 * disabled "stripe" texture hack for Windows by default; uses deprecated userAgent, and makes little difference in 2022 vs 2014
@@ -72,7 +75,9 @@ The Y, U and V planes are uploaded as luminance textures, then combined into RGB
 
 Early versions of IE 11 do not support luminance or alpha textures at all, and in IE 11 update 1 and Edge uploading is unexpectedly slow. In fact, luminance and alpha textures seem consistently slow on Windows even in Chrome and Firefox, possibly due to a mismatch in interfaces between WebGL and Direct3D.
 
-On Windows, the textures are uploaded as packed RGBA textures, then unpacked to luminance textures on the GPU. This has a small runtime cost, but seems less than the cost of letting the ANGLE layer in the browser swizzle.
+I've found as of 2022 this also affects some Mac systems with AMD GPUs, so a workaround is now enabled for all systems by default.
+
+The textures are uploaded as packed RGBA textures, then unpacked to luminance textures on the GPU. This has a small runtime cost, but seems less than the cost of letting the ANGLE or other driver layer in the browser swizzle.
 
 # Usage
 

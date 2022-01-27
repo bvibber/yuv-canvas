@@ -1003,13 +1003,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	// ssllooww to upload on some machines, so we pack into RGBA and unpack in
 	// the shaders.
 	//
-	// This seems to affect all browsers on Windows, probably due to fun
-	// mismatches between GL and D3D.
+	// Some browsers / GPUs seem to have no problem with this, others have
+	// a huge impact in CPU doing the texture uploads.
 	//
-	// However as of 2022 it makes less difference than it did in 2014.
-	// Now disabled by default, may be removed entirely later. Force to 'true'
-	// before creating your instance to re-enable it for now.
-	WebGLFrameSink.stripe = false;
+	// For instance on macOS 12.2 on a MacBook Pro 2018 with AMD GPU it
+	// gets real slow at high res.
+	//
+	// Just turning it on by default as of 2022. Sigh.
+	WebGLFrameSink.stripe = true;
 
 	WebGLFrameSink.contextForCanvas = function(canvas) {
 		var options = {
