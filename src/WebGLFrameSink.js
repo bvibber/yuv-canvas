@@ -174,11 +174,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					gl.texImage2D(
 						gl.TEXTURE_2D,
 						0, // mip level
-						gl.LUMINANCE, // internal format
+						gl.ALPHA, // internal format
 						width,
 						height,
 						0, // border
-						gl.LUMINANCE, // format
+						gl.ALPHA, // format
 						gl.UNSIGNED_BYTE, //type
 						data // data!
 					);
@@ -190,7 +190,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						0, // y
 						width,
 						height,
-						gl.LUMINANCE, // internal format
+						gl.ALPHA, // internal format
 						gl.UNSIGNED_BYTE, //type
 						data // data!
 					);
@@ -445,7 +445,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	//
 	// For instance on macOS 12.2 on a MacBook Pro 2018 with AMD GPU it
 	// can real down at high res. This is partially compensated for by
-	// improving the upload-vs-update behavior for the luminance textures.
+	// improving the upload-vs-update behavior for the alpha textures.
 	//
 	// Currently keeping it off as of April 2022, but leaving it in so it
 	// can be enabled if desired.
@@ -486,7 +486,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				texture = gl.createTexture(),
 				data = new Uint8Array(width * height),
 				texWidth = WebGLFrameSink.stripe ? (width / 4) : width,
-				format = WebGLFrameSink.stripe ? gl.RGBA : gl.LUMINANCE,
+				format = WebGLFrameSink.stripe ? gl.RGBA : gl.ALPHA,
 				filter = WebGLFrameSink.stripe ? gl.NEAREST : gl.LINEAR;
 
 			gl.activeTexture(register);
@@ -509,7 +509,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			var err = gl.getError();
 			if (err) {
-				// Doesn't support luminance textures?
+				// Doesn't support alpha textures?
 				return false;
 			} else {
 				return true;

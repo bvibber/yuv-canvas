@@ -18,5 +18,5 @@ void main() {
       texture2D(uTexture, vTexturePosition)
    );
 
-   gl_FragColor = vec4(fLuminance, fLuminance, fLuminance, 1);
+   gl_FragColor = vec4(0, 0, 0, fLuminance);
 }

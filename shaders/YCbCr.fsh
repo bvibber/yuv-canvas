@@ -8,10 +8,10 @@ uniform sampler2D uTextureCr;
 varying vec2 vLumaPosition;
 varying vec2 vChromaPosition;
 void main() {
-   // Y, Cb, and Cr planes are uploaded as LUMINANCE textures.
-   float fY = texture2D(uTextureY, vLumaPosition).x;
-   float fCb = texture2D(uTextureCb, vChromaPosition).x;
-   float fCr = texture2D(uTextureCr, vChromaPosition).x;
+   // Y, Cb, and Cr planes are uploaded as ALPHA textures.
+   float fY = texture2D(uTextureY, vLumaPosition).w;
+   float fCb = texture2D(uTextureCb, vChromaPosition).w;
+   float fCr = texture2D(uTextureCr, vChromaPosition).w;
 
    // Premultipy the Y...
    float fYmul = fY * 1.1643828125;
