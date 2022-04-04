@@ -14,6 +14,10 @@ MIT license, see the source files:
 
 # Updates
 
+1.2.11 - 2022-03-04
+* perf: further improvements to speed in Safari / macOS using alpha instead of luminance textures
+* update shaders from low to medium precision, may fix pixel precision errors on some GPUs
+
 1.2.10 - 2022-03-04
 * perf: fixed over-eager use of texImage2d on non-stripe frame updates
 * turning off stripe mode as default due to a compatibility problem with Netscape on macOS that is not resolved

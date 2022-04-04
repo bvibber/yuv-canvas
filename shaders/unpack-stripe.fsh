@@ -1,6 +1,6 @@
 // extra 'stripe' texture fiddling to work around IE 11's poor performance on gl.LUMINANCE and gl.ALPHA textures
 
-precision lowp float;
+precision mediump float;
 
 uniform sampler2D uStripe;
 uniform sampler2D uTexture;
