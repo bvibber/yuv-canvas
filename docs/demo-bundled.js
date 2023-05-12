@@ -667,6 +667,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			codedWidth: format.width,
 			codedHeight: format.height,
 			timestamp: Math.round((buffer.timestamp || 0) * 1000000),
+			alpha: 'discard',
 			layout: [
 				{offset: offsetY, stride: buffer.y.stride},
 				{offset: offsetU, stride: buffer.u.stride},
@@ -705,7 +706,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			this.canvas.height = frame.displayHeight;
 		}
 
-		this.ctx.clearRect(0, 0, frame.displayWidth, frame.displayHeight);
 		this.ctx.drawImage(frame, 0, 0);
 
 		if (owned) {
