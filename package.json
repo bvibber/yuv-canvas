@@ -24,9 +24,10 @@
     "aliasify": "^2.1.0",
     "brfs": "^1.4.3",
     "browserify": "^13.1.0",
+    "eslint": "^8.40.0",
     "grunt": "^1.6.1",
     "grunt-browserify": "^6.0.0",
-    "grunt-eslint": "^24.0.1",
+    "grunt-eslint": "^24.1.0",
     "grunt-text-replace": "^0.4.0",
     "http-server": "^14.1.1",
     "yuv-buffer": "^1.0.0"

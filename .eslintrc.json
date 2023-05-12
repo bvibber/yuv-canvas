@@ -15,6 +15,7 @@
   "globals": {
     "Uint8Array": true,
     "Float32Array": true,
-    "Uint32Array": true
+    "Uint32Array": true,
+    "VideoFrame": true
   }
 }
