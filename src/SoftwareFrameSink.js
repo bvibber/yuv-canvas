@@ -25,7 +25,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		YCbCr = require('./YCbCr.js');
 
 	/**
-	 * @param {HTMLCanvasElement} canvas - HTML canvas eledment to attach to
+	 * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
 	 * @constructor
 	 */
 	function SoftwareFrameSink(canvas) {

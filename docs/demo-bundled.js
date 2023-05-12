@@ -487,7 +487,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		YCbCr = require('./YCbCr.js');
 
 	/**
-	 * @param {HTMLCanvasElement} canvas - HTML canvas eledment to attach to
+	 * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
 	 * @constructor
 	 */
 	function SoftwareFrameSink(canvas) {
@@ -602,7 +602,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	var FrameSink = require('./FrameSink.js');
 
 	/**
-	 * @param {HTMLCanvasElement} canvas - HTML canvas eledment to attach to
+	 * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
 	 * @constructor
 	 */
 	function WebCodecsFrameSink(canvas) {
@@ -705,6 +705,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			this.canvas.height = frame.displayHeight;
 		}
 
+		this.ctx.clearRect(0, 0, frame.displayWidth, frame.displayHeight);
 		this.ctx.drawImage(frame, 0, 0);
 
 		if (owned) {
