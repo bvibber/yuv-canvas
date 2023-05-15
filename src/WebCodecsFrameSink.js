@@ -72,29 +72,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	 * @returns {VideoFrame} caller is responsible for calling close()
 	 */
 	WebCodecsFrameSink.convertVideoFrame = function (buffer) {
-		// WARNING: THIS NEEDS TO CREATE A COPY
-		// @todo fixme we can use a common array compatibly
-		var offsetY = 0;
-		var offsetU = offsetY + buffer.y.bytes.byteLength;
-		var offsetV = offsetU + buffer.u.bytes.byteLength;
-		var len = offsetV + buffer.v.bytes.byteLength;
-		var bytes = new Uint8Array(len);
-		bytes.set(buffer.y.bytes, offsetY);
-		bytes.set(buffer.u.bytes, offsetU);
-		bytes.set(buffer.v.bytes, offsetV);
-
 		var format = buffer.format;
 		var options = {
 			format: formatFourCC(format),
 			codedWidth: format.width,
 			codedHeight: format.height,
 			timestamp: Math.round((buffer.timestamp || 0) * 1000000),
-			alpha: 'discard',
-			layout: [
-				{offset: offsetY, stride: buffer.y.stride},
-				{offset: offsetU, stride: buffer.u.stride},
-				{offset: offsetV, stride: buffer.v.stride},
-			],
 			visibleRect: {
 				x: format.cropLeft,
 				y: format.cropTop,
@@ -105,7 +88,29 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			displayHeight: format.displayHeight,
 			colorSpace: colorSpace(format),
 		};
-		return new VideoFrame(bytes.buffer, options);
+
+		var buf = buffer.buffer;
+		if (!buf) {
+			// Create a packed copy if using old client.
+			var offsetY = 0;
+			var offsetU = offsetY + buffer.y.bytes.byteLength;
+			var offsetV = offsetU + buffer.u.bytes.byteLength;
+			var len = offsetV + buffer.v.bytes.byteLength;
+			var bytes = new Uint8Array(len);
+
+			options.layout = [
+				{offset: offsetY, stride: buffer.y.stride},
+				{offset: offsetU, stride: buffer.u.stride},
+				{offset: offsetV, stride: buffer.v.stride},
+			];
+
+			bytes.set(buffer.y.bytes, offsetY);
+			bytes.set(buffer.u.bytes, offsetU);
+			bytes.set(buffer.v.bytes, offsetV);
+
+			buf = bytes.buffer;
+		}
+		return new VideoFrame(buf, options);
 	}
 
 	/**
@@ -128,6 +133,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			this.canvas.height = frame.displayHeight;
 		}
 
+		this.ctx.clearRect(0, 0, frame.displayWidth, frame.displayHeight);
 		this.ctx.drawImage(frame, 0, 0);
 
 		if (owned) {
