@@ -186,18 +186,14 @@ export class WebGLFrameSink extends FrameSink {
 		this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
 		this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
 
-		this.gl.uniform1i(this.program.uniforms[name], index);
+		this.gl.uniform1i(this.YCbCr.uniforms[name], index);
 	}
 
 	init() {
 		this.cache = new TextureCache(this.gl);
 
-		this.program = new Program(this.gl, {
-			vertexShader: shaders.vertex,
-			fragmentShader: shaders.fragment,
-			attribs: ['aPosition', 'aLumaPosition', 'aChromaPosition'],
-			buffers: ['position', 'lumaPosition', 'chromaPosition'],
-		});
+		this.YCbCr = new Program(this.gl, shaders.YCbCr);
+		this.RGB = new Program(this.gl, shaders.RGB);
 	}
 
 	setupRect(buffer, location, rectangle) {
@@ -230,7 +226,7 @@ export class WebGLFrameSink extends FrameSink {
 	 */
 	drawFrame(buffer) {
 		const format = buffer.format;
-		const formatUpdate = (!this.program ||
+		const formatUpdate = (!this.YCbCr ||
 			this.canvas.width !== format.displayWidth ||
 			this.canvas.height !== format.displayHeight);
 
@@ -241,12 +237,12 @@ export class WebGLFrameSink extends FrameSink {
 			this.clear();
 		}
 
-		if (!this.program) {
+		if (!this.YCbCr) {
 			this.init();
 		}
 
 		// Set up the rectangle and draw it
-		this.gl.useProgram(this.program.program);
+		this.gl.useProgram(this.YCbCr.program);
 		this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
 		// Create or update the textures...
@@ -260,19 +256,19 @@ export class WebGLFrameSink extends FrameSink {
 			this.attachTexture('uTextureCr', this.gl.TEXTURE2, 2);
 
 			this.setupRect(
-				this.program.buffers.position,
-				this.program.attribs.aPosition,
+				this.YCbCr.buffers.position,
+				this.YCbCr.attribs.aPosition,
 				rectangle
 			);
 			this.setupTexturePosition(
-				this.program.buffers.lumaPosition,
-				this.program.attribs.aLumaPosition,
+				this.YCbCr.buffers.lumaPosition,
+				this.YCbCr.attribs.aLumaPosition,
 				format,
 				buffer.y.stride
 			);
 			this.setupTexturePosition(
-				this.program.buffers.chromaPosition,
-				this.program.attribs.aChromaPosition,
+				this.YCbCr.buffers.chromaPosition,
+				this.YCbCr.attribs.aChromaPosition,
 				format,
 				buffer.u.stride * format.width / format.chromaWidth
 			);
