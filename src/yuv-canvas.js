@@ -18,27 +18,22 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-(function() {
-"use strict";
 
-var FrameSink = require('./FrameSink.js'),
-    SoftwareFrameSink = require('./SoftwareFrameSink.js'),
-    WebGLFrameSink = require('./WebGLFrameSink.js'),
-    WebCodecsFrameSink = require('./WebCodecsFrameSink.js');
+import {FrameSink} from './FrameSink.js';
+import {SoftwareFrameSink} from './SoftwareFrameSink.js';
+import {WebGLFrameSink} from './WebGLFrameSink.js';
 
 /**
  * @typedef {Object} YUVCanvasOptions
  * @property {boolean} webGL - Whether to use WebGL to draw to the canvas and accelerate color space conversion. If left out, defaults to auto-detect.
  */
 
-var YUVCanvas = {
-    FrameSink: FrameSink,
+export const YUVCanvas = {
+    FrameSink,
 
-    SoftwareFrameSink: SoftwareFrameSink,
+    SoftwareFrameSink,
 
-    WebGLFrameSink: WebGLFrameSink,
-
-    WebCodecsFrameSink: WebCodecsFrameSink,
+    WebGLFrameSink,
 
     /**
      * Attach a suitable FrameSink instance to an HTML5 canvas element.
@@ -51,19 +46,11 @@ var YUVCanvas = {
      * @param {YUVCanvasOptions} options - map of options
      * @returns {FrameSink} - instance of suitable subclass.
      */
-    attach: function(canvas, options) {
-        options = options || {};
-        var webCodecs = ('webCodecs' in options) ? options.webCodecs : WebCodecsFrameSink.isAvailable();
-        var webGL = ('webGL' in options) ? options.webGL : WebGLFrameSink.isAvailable();
-        if (webCodecs) {
-            return new WebCodecsFrameSink(canvas, options);
-        } else if (webGL) {
+    attach: function(canvas, options={}) {
+        const webGL = ('webGL' in options) ? options.webGL : WebGLFrameSink.isAvailable();
+        if (webGL) {
             return new WebGLFrameSink(canvas, options);
-        } else {
-            return new SoftwareFrameSink(canvas, options);
         }
+        return new SoftwareFrameSink(canvas, options);
     }
 };
-
-module.exports = YUVCanvas;
-})();
