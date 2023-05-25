@@ -83,13 +83,13 @@ function extractImageData(image) {
 // For each plane, we copy the grayscale values into the target YUVPlane
 // object's data, applying a per-plane multiplier which is manipulable
 // by the user.
-function copyBrightnessToPlane(imageData, plane, width, height, multiplier) {
+function copyBrightnessToPlane(imageData, plane, width, height, multiplier, offset) {
 	// Because we're doing multiplication that may wrap, use the browser-optimized
 	// Uint8ClampedArray instead of the default Uint8Array view.
 	const clampedBytes = new Uint8ClampedArray(plane.bytes.buffer, plane.bytes.offset, plane.bytes.byteLength);
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
-			clampedBytes[y * plane.stride + x] = imageData.data[y * width * 4 + x * 4] * multiplier;
+			clampedBytes[y * plane.stride + x] = (imageData.data[y * width * 4 + x * 4] - offset) * multiplier + offset;
 		}
 	}
 }
@@ -122,13 +122,13 @@ function setupSources() {
 function updateFrame() {
 	// Copy data in!
 	if (sourceData.y) {
-		copyBrightnessToPlane(sourceData.y, frame.y, format.width, format.height, sourceFader.y);
+		copyBrightnessToPlane(sourceData.y, frame.y, format.width, format.height, sourceFader.y, 0);
 	}
 	if (sourceData.u) {
-		copyBrightnessToPlane(sourceData.u, frame.u, format.chromaWidth, format.chromaHeight, sourceFader.u);
+		copyBrightnessToPlane(sourceData.u, frame.u, format.chromaWidth, format.chromaHeight, sourceFader.u, 128);
 	}
 	if (sourceData.v) {
-		copyBrightnessToPlane(sourceData.v, frame.v, format.chromaWidth, format.chromaHeight, sourceFader.v);
+		copyBrightnessToPlane(sourceData.v, frame.v, format.chromaWidth, format.chromaHeight, sourceFader.v, 128);
 	}
 
 	drawable = filter(frame);
