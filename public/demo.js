@@ -7,20 +7,26 @@ function q(name) {
 	return document.querySelector(name);
 }
 
+let filter = identity;
+
 if (location.hash === '#webgl') {
 	q('#webgl').checked = true;
 	options.webGL = true;
+	filter = identity;
 } else if (location.hash === '#software') {
 	q('#software').checked = true;
 	options.webGL = false;
-} else {
-	q('#auto').checked = true;
+	filter = identity;
+} else if (location.hash === '#webgl-webcodecs') {
+	q('#webgl-webcodecs').checked = true;
+	options.webGL = true;
+	filter = convertVideoFrame;
+} else if (location.hash === '#software-webcodecs') {
+	q('#software-webcodecs').checked = true;
+	options.webGL = false;
+	filter = convertVideoFrame;
 }
 
-q('#auto').addEventListener('click', () => {
-	location.href = location.pathname + '#auto';
-	location.reload();
-});
 q('#webgl').addEventListener('click', () => {
 	location.href = location.pathname + '#webgl';
 	location.reload();
@@ -29,12 +35,21 @@ q('#software').addEventListener('click', () => {
 	location.href = location.pathname + '#software';
 	location.reload();
 });
+q('#webgl-webcodecs').addEventListener('click', () => {
+	location.href = location.pathname + '#webgl-webcodecs';
+	location.reload();
+});
+q('#software-webcodecs').addEventListener('click', () => {
+	location.href = location.pathname + '#software-webcodecs';
+	location.reload();
+});
 
 
 let canvas = q('canvas'),
 	yuvCanvas = YUVCanvas.attach(canvas, options),
 	format,
 	frame,
+	drawable,
 	sourceData = {},
 	sourceFader = {
 		y: 1,
@@ -116,7 +131,8 @@ function updateFrame() {
 		copyBrightnessToPlane(sourceData.v, frame.v, format.chromaWidth, format.chromaHeight, sourceFader.v);
 	}
 
-	yuvCanvas.drawFrame(frame);
+	drawable = filter(frame);
+	yuvCanvas.drawFrame(drawable);
 }
 
 function setupBenchmark() {
@@ -124,12 +140,66 @@ function setupBenchmark() {
 		const rounds = 1000,
 			start = Date.now();
 		for (let i = 0; i < rounds; i++) {
-			yuvCanvas.drawFrame(frame);
+			yuvCanvas.drawFrame(drawable);
 		}
 		const delta = (Date.now() - start) / 1000;
 		const fps = rounds / delta;
 		document.getElementById('fps').innerText = fps + 'fps';
 	});
+}
+
+function convertVideoFrame(buffer) {
+	if (drawable) {
+		drawable.close();
+	}
+	const format = buffer.format;
+	if (format.chromaWidth !== format.width / 2 ||
+		format.chromaHeight !== format.height / 2) {
+		throw new Error('Needs 4:2:0 buffer');
+	}
+	const options = {
+		format: 'I420',
+		codedWidth: format.width,
+		codedHeight: format.height,
+		timestamp: 0,
+		visibleRect: {
+			x: format.cropLeft,
+			y: format.cropTop,
+			width: format.cropWidth,
+			height: format.cropHeight,
+		},
+		displayWidth: format.displayWidth,
+		displayHeight: format.displayHeight,
+		colorSpace: {
+			primaries: 'bt709',
+			transfer: 'bt709',
+			matrix: 'bt709',
+			fullRange: true,
+		}
+	};
+
+	// Create a packed buffer
+	var offsetY = 0;
+	var offsetU = offsetY + buffer.y.bytes.byteLength;
+	var offsetV = offsetU + buffer.u.bytes.byteLength;
+	var len = offsetV + buffer.v.bytes.byteLength;
+	var bytes = new Uint8Array(len);
+
+	options.layout = [
+		{offset: offsetY, stride: buffer.y.stride},
+		{offset: offsetU, stride: buffer.u.stride},
+		{offset: offsetV, stride: buffer.v.stride},
+	];
+
+	bytes.set(buffer.y.bytes, offsetY);
+	bytes.set(buffer.u.bytes, offsetU);
+	bytes.set(buffer.v.bytes, offsetV);
+
+	return new VideoFrame(bytes.buffer, options);
+}
+
+function identity(buffer) {
+	return buffer;
 }
 
 setupFrame();

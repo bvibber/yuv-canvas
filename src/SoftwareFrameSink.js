@@ -55,9 +55,37 @@ export class SoftwareFrameSink extends FrameSink {
 
 	/**
 	 * Actually draw a frame into the canvas.
-	 * @param {YUVFrame} buffer - YUV frame buffer object to draw
+	 * @param {YUVBuffer|VideoFrame} buffer - YUV frame buffer object to draw
 	 */
 	drawFrame(buffer) {
+		if (typeof VideoFrame === 'function' && buffer instanceof VideoFrame) {
+			this.drawVideoFrame(buffer);
+		} else {
+			this.drawYUVBuffer(buffer);
+		}
+	}
+
+	/**
+	 * Draw a WebCodecs VideoFrame to the canvas
+	 * @param {VideoFrame} frame - WebCodecs VideoFrame to draw
+	 */
+	drawVideoFrame(frame) {
+		const width = frame.displayWidth;
+		const height = frame.displayHeight;
+		if (this.canvas.width !== width || this.canvas.height !== height) {
+			// Keep the canvas at the right size...
+			this.canvas.width = width;
+			this.canvas.height = height;
+		}
+		this.ctx.clearRect(0, 0, width, height);
+		this.ctx.drawImage(frame, 0, 0);
+	}
+
+	/**
+	 * Draw a YUVBuffer to the canvas
+	 * @param {YUVBuffer} buffer - YUVBuffer to draw
+	 */
+	drawYUVBuffer(buffer) {
 		const canvas = this.canvas,
 			format = buffer.format;
 
