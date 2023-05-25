@@ -22,14 +22,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import {FrameSink} from './FrameSink.js';
 import {convertYCbCr} from './YCbCr.js';
 
-const ctx = Symbol('ctx');
-const imageData = Symbol('imageData');
-const resampleCanvas = Symbol('resampleCanvas');
-const resampleContext = Symbol('resampleContext');
-
-const initImageData = Symbol('initImageData');
-const initResampleCanvas = Symbol('initResampleCanvas');
-
 export class SoftwareFrameSink extends FrameSink {
 	/**
 	 * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
@@ -37,28 +29,28 @@ export class SoftwareFrameSink extends FrameSink {
 	 */
 	constructor(canvas, options={}) {
 		super(canvas, options);
-		this[ctx] = canvas.getContext('2d');
-		this[imageData] = null;
-		this[resampleCanvas] = null;
-		this[resampleContext] = null;
+		this.ctx = canvas.getContext('2d');
+		this.imageData = null;
+		this.resampleCanvas = null;
+		this.resampleContext = null;
 	}
 
-	[initImageData](width, height) {
-		this[imageData] = this[ctx].createImageData(width, height);
+	initImageData(width, height) {
+		this.imageData = this.ctx.createImageData(width, height);
 
 		// Prefill the alpha to opaque
-		const data = this[imageData].data,
+		const data = this.imageData.data,
 			pixelCount = width * height * 4;
 		for (let i = 0; i < pixelCount; i += 4) {
 			data[i + 3] = 255;
 		}
 	}
 
-	[initResampleCanvas](cropWidth, cropHeight) {
-		this[resampleCanvas] = document.createElement('canvas');
-		this[resampleCanvas].width = cropWidth;
-		this[resampleCanvas].height = cropHeight;
-		this[resampleContext] = this[resampleCanvas].getContext('2d');
+	initResampleCanvas(cropWidth, cropHeight) {
+		this.resampleCanvas = document.createElement('canvas');
+		this.resampleCanvas.width = cropWidth;
+		this.resampleCanvas.height = cropHeight;
+		this.resampleContext = this.resampleCanvas.getContext('2d');
 	}
 
 	/**
@@ -67,7 +59,6 @@ export class SoftwareFrameSink extends FrameSink {
 	 */
 	drawFrame(buffer) {
 		const canvas = this.canvas,
-			imageData = this[imageData],
 			format = buffer.format;
 
 		if (canvas.width !== format.displayWidth || canvas.height !== format.displayHeight) {
@@ -76,41 +67,41 @@ export class SoftwareFrameSink extends FrameSink {
 			canvas.height = format.displayHeight;
 		}
 
-		if (imageData === null ||
-				imageData.width != format.width ||
-				imageData.height != format.height) {
-			this[initImageData](format.width, format.height);
+		if (this.imageData === null ||
+			this.imageData.width != format.width ||
+			this.imageData.height != format.height) {
+			this.initImageData(format.width, format.height);
 		}
 
 		// YUV -> RGB over the entire encoded frame
-		convertYCbCr(buffer, imageData.data);
+		convertYCbCr(buffer, this.imageData.data);
 
 		const resample = (format.cropWidth != format.displayWidth || format.cropHeight != format.displayHeight);
 		let drawContext;
 		if (resample) {
 			// hack for non-square aspect-ratio
 			// putImageData doesn't resample, so we have to draw in two steps.
-			if (!this[resampleCanvas]) {
-				this[initResampleCanvas](format.cropWidth, format.cropHeight);
+			if (!this.resampleCanvas) {
+				this.initResampleCanvas(format.cropWidth, format.cropHeight);
 			}
-			drawContext = this[resampleContext];
+			drawContext = this.resampleContext;
 		} else {
-			drawContext = this[ctx];
+			drawContext = this.ctx;
 		}
 
 		// Draw cropped frame to either the final or temporary canvas
-		drawContext.putImageData(imageData,
+		drawContext.putImageData(this.imageData,
 			-format.cropLeft, -format.cropTop, // must offset the offset
 			format.cropLeft, format.cropTop,
 			format.cropWidth, format.cropHeight);
 
 		if (resample) {
-			this[ctx].drawImage(this[resampleCanvas], 0, 0, format.displayWidth, format.displayHeight);
+			this.ctx.drawImage(this.resampleCanvas, 0, 0, format.displayWidth, format.displayHeight);
 		}
 	};
 
 	clear() {
-		this[ctx].clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	}
 
 }

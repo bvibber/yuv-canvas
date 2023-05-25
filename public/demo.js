@@ -1,8 +1,38 @@
 import YUVBuffer from 'yuv-buffer';
 import {YUVCanvas} from '../src/yuv-canvas.js';
 
-let canvas = document.querySelector('canvas'),
-	yuvCanvas = YUVCanvas.attach(canvas),
+let options = {};
+
+function q(name) {
+	return document.querySelector(name);
+}
+
+if (location.hash === '#webgl') {
+	q('#webgl').checked = true;
+	options.webGL = true;
+} else if (location.hash === '#software') {
+	q('#software').checked = true;
+	options.webGL = false;
+} else {
+	q('#auto').checked = true;
+}
+
+q('#auto').addEventListener('click', () => {
+	location.href = location.pathname + '#auto';
+	location.reload();
+});
+q('#webgl').addEventListener('click', () => {
+	location.href = location.pathname + '#webgl';
+	location.reload();
+});
+q('#software').addEventListener('click', () => {
+	location.href = location.pathname + '#software';
+	location.reload();
+});
+
+
+let canvas = q('canvas'),
+	yuvCanvas = YUVCanvas.attach(canvas, options),
 	format,
 	frame,
 	sourceData = {},
