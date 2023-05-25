@@ -3,12 +3,14 @@ export const shaders = {
 		vertexShader: YCBCR_VERTEX_SHADER,
 		fragmentShader: YCBCR_FRAGMENT_SHADER,
 		attribs: ['aPosition', 'aLumaPosition', 'aChromaPosition'],
+		uniforms: ['uTextureY', 'uTextureCb', 'uTextureCr'],
 		buffers: ['position', 'lumaPosition', 'chromaPosition']
 	},
 	RGB: {
 		vertexShader: RGB_VERTEX_SHADER,
 		fragmentShader: RGB_FRAGMENT_SHADER,
 		attribs: ['aPosition', 'aTexturePosition'],
+		uniforms: ['uTextureImage'],
 		buffers: ['position', 'texturePosition']
 	}
 };

@@ -30,27 +30,12 @@ module.exports = function(grunt) {
 					to: stringify('./shaders/RGB.fsh')
 				}]
 			}
-		},
-		browserify: {
-			demo: {
-				files: {
-					'docs/demo-bundled.js': ['docs/demo.js']
-				},
-				options: {
-					transform: [[require('aliasify'), {
-						aliases: {
-							'yuv-canvas': './src/yuv-canvas.js'
-						}
-					}]]
-				}
-			}
 		}
 	});
 
 	grunt.loadNpmTasks('grunt-eslint');
 	grunt.loadNpmTasks('grunt-text-replace');
-	grunt.loadNpmTasks('grunt-browserify');
 
-	grunt.registerTask('default', ['eslint', 'replace', 'browserify']);
+	grunt.registerTask('default', ['eslint', 'replace']);
 
 };

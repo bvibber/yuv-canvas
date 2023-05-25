@@ -69,12 +69,12 @@ function mapProps(names, callback) {
 
 class Program {
 	constructor(gl, {vertexShader, fragmentShader, uniforms=[], attribs=[], buffers=[]}) {
-		this.vertexShader = compileShader(gl.VERTEX_SHADER, vertexShader);
-		this.fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentShader);
+		this.vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexShader);
+		this.fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentShader);
 
 		this.program = gl.createProgram();
-		gl.attachShader(this.program, vertexShader);
-		gl.attachShader(this.program, fragmentShader);
+		gl.attachShader(this.program, this.vertexShader);
+		gl.attachShader(this.program, this.fragmentShader);
 		gl.linkProgram(this.program);
 		if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
 			const err = gl.getProgramInfoLog(this.program);
@@ -249,12 +249,11 @@ export class WebGLFrameSink extends FrameSink {
 		this.uploadTexture('uTextureY', formatUpdate, buffer.y.stride, format.height, buffer.y.bytes);
 		this.uploadTexture('uTextureCb', formatUpdate, buffer.u.stride, format.chromaHeight, buffer.u.bytes);
 		this.uploadTexture('uTextureCr', formatUpdate, buffer.v.stride, format.chromaHeight, buffer.v.bytes);
+		this.attachTexture('uTextureY', this.gl.TEXTURE0, 0);
+		this.attachTexture('uTextureCb', this.gl.TEXTURE1, 1);
+		this.attachTexture('uTextureCr', this.gl.TEXTURE2, 2);
 
 		if (formatUpdate) {
-			this.attachTexture('uTextureY', this.gl.TEXTURE0, 0);
-			this.attachTexture('uTextureCb', this.gl.TEXTURE1, 1);
-			this.attachTexture('uTextureCr', this.gl.TEXTURE2, 2);
-
 			this.setupRect(
 				this.YCbCr.buffers.position,
 				this.YCbCr.attribs.aPosition,
