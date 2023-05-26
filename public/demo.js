@@ -171,10 +171,17 @@ function convertVideoFrame(buffer) {
 		displayWidth: format.displayWidth,
 		displayHeight: format.displayHeight,
 		colorSpace: {
-			primaries: 'bt709',
-			transfer: 'bt709',
-			matrix: 'bt709',
-			fullRange: true,
+			//primaries: 'bt709',
+			//transfer: 'bt709',
+			//matrix: 'bt709',
+			//fullRange: true
+
+			// current software code seems to match this in chrome
+			// safari seems to ignore the fullRange: false?
+			primaries: 'smpte170m',
+			matrix: 'smpte170m',
+			transfer: 'smpte170m',
+			fullRange: false
 		}
 	};
 
