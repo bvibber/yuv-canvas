@@ -100,6 +100,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		}
 
 		function uploadTexture(name, formatUpdate, width, height, data) {
+			var create = !textures[name] || formatUpdate;
 			var texture = createOrReuseTexture(name, formatUpdate);
 			gl.activeTexture(gl.TEXTURE0);
 
@@ -165,21 +166,35 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			} else {
 				gl.bindTexture(gl.TEXTURE_2D, texture);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-				gl.texImage2D(
-					gl.TEXTURE_2D,
-					0, // mip level
-					gl.LUMINANCE, // internal format
-					width,
-					height,
-					0, // border
-					gl.LUMINANCE, // format
-					gl.UNSIGNED_BYTE, //type
-					data // data!
-				);
+				if (create) {
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						0, // mip level
+						gl.ALPHA, // internal format
+						width,
+						height,
+						0, // border
+						gl.ALPHA, // format
+						gl.UNSIGNED_BYTE, //type
+						data // data!
+					);
+				} else {
+					gl.texSubImage2D(
+						gl.TEXTURE_2D,
+						0, // mip level
+						0, // x
+						0, // y
+						width,
+						height,
+						gl.ALPHA, // internal format
+						gl.UNSIGNED_BYTE, //type
+						data // data!
+					);
+				}
 			}
 		}
 
@@ -429,10 +444,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	// a huge impact in CPU doing the texture uploads.
 	//
 	// For instance on macOS 12.2 on a MacBook Pro 2018 with AMD GPU it
-	// gets real slow at high res.
+	// can real down at high res. This is partially compensated for by
+	// improving the upload-vs-update behavior for the alpha textures.
 	//
-	// Just turning it on by default as of 2022. Sigh.
-	WebGLFrameSink.stripe = true;
+	// Currently keeping it off as of April 2022, but leaving it in so it
+	// can be enabled if desired.
+	WebGLFrameSink.stripe = false;
 
 	WebGLFrameSink.contextForCanvas = function(canvas) {
 		var options = {
@@ -469,7 +486,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				texture = gl.createTexture(),
 				data = new Uint8Array(width * height),
 				texWidth = WebGLFrameSink.stripe ? (width / 4) : width,
-				format = WebGLFrameSink.stripe ? gl.RGBA : gl.LUMINANCE,
+				format = WebGLFrameSink.stripe ? gl.RGBA : gl.ALPHA,
 				filter = WebGLFrameSink.stripe ? gl.NEAREST : gl.LINEAR;
 
 			gl.activeTexture(register);
@@ -492,7 +509,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			var err = gl.getError();
 			if (err) {
-				// Doesn't support luminance textures?
+				// Doesn't support alpha textures?
 				return false;
 			} else {
 				return true;
