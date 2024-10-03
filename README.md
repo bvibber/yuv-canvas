@@ -1,22 +1,23 @@
 # YUVCanvas draws YUV video frames to an HTML 5 canvas element.
 
-It is used in the [ogv.js media player](https://github.com/brion/ogv.js)
+It is used in the [ogv.js media player](https://github.com/bvibber/ogv.js)
 and is suitable for high-frequency frame updates using WebGL for drawing
 and colorspace conversion.
 
 ## Copyright
 
-Copyright 2014-2023 by Brion Vibber <brion@pobox.com>
+Copyright 2014-2024 by Brooke Vibber <bvibber@pobox.com>
 MIT license, see the source files:
 
-* Source: https://github.com/brion/yuv-canvas
-* Issues: https://github.com/brion/yuv-canvas/issues
+* Source: https://github.com/bvibber/yuv-canvas
+* Issues: https://github.com/bvibber/yuv-canvas/issues
 
 ## Updates
 
-1.3.0 - 2023-02-24
+1.3.0 - 2024-10-03
 
 * build cleanup
+* doc/name/links cleanup
 
 1.2.11 - 2022-03-04
 
@@ -85,7 +86,7 @@ MIT license, see the source files:
 
 ## Data format
 
-Planar YUV frames are packed into objects per the [yuv-buffer](https://github.com/brion/yuv-buffer) format. Frame buffer objects can be safely copied or transferred between worker threads, and can be either garbage collected or reused for another frame after output.
+Planar YUV frames are packed into objects per the [yuv-buffer](https://github.com/bvibber/yuv-buffer) format. Frame buffer objects can be safely copied or transferred between worker threads, and can be either garbage collected or reused for another frame after output.
 
 Each frame buffer includes the frame's size, a crop rectangle, a display aspect ratio, and chroma subsampling format as well as the raw bytes.
 
@@ -134,10 +135,22 @@ yuv.clear();
 
 ## Demo
 
-The [included demo](https://brion.github.io/yuv-canvas/demo.html) combines Y, U, and V planes from grayscale JPEGs into a color photograph on a canvas. Check it out!
+The [included demo](https://bvibber.github.io/yuv-canvas/demo.html) combines Y, U, and V planes from grayscale JPEGs into a color photograph on a canvas. Check it out!
 
 ## Building
 
 Run `npm install` (or `grunt` to rebuild if necessary) to build derived files in a local source checkout.
 
 Derived files are the array of WebGL shaders (`build/shaders.js`) and the bundled JS for the demo (`docs/demo-bundled.js`).
+
+# License
+
+MIT-style license:
+
+Copyright (c) 2014-2024 Brooke Vibber <bvibber@pobox.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

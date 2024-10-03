@@ -5,7 +5,7 @@
   "main": "src/yuv-canvas.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/brion/yuv-canvas.git"
+    "url": "https://github.com/bvibber/yuv-canvas.git"
   },
   "scripts": {
     "build": "grunt",
@@ -18,7 +18,7 @@
     "canvas",
     "webgl"
   ],
-  "author": "Brion Vibber <brion@pobox.com>",
+  "author": "Brooke Vibber <bvibber@pobox.com>",
   "license": "MIT",
   "devDependencies": {
     "aliasify": "^2.1.0",
@@ -29,6 +29,6 @@
     "grunt-eslint": "^24.0.1",
     "grunt-text-replace": "^0.4.0",
     "http-server": "^14.1.1",
-    "yuv-buffer": "^1.0.0"
+    "yuv-buffer": "^1.0.1"
   }
 }

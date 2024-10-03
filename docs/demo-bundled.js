@@ -123,7 +123,7 @@ module.exports = {
 
 },{"./../src/yuv-canvas.js":9,"yuv-buffer":3}],3:[function(require,module,exports){
 /*
-Copyright (c) 2014-2016 Brion Vibber <brion@pobox.com>
+Copyright (c) 2014-2024 Brooke Vibber <bvibber@pobox.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -255,21 +255,6 @@ var YUVBuffer = {
       displayWidth: displayWidth,
       displayHeight: displayHeight
     };
-  },
-
-  /**
-   * Allocate a new YUVPlane object of the given size.
-   * @param {number} stride - byte distance between rows
-   * @param {number} rows - number of rows to allocate
-   * @returns {YUVPlane} - freshly allocated planar buffer
-   */
-  allocPlane: function(stride, rows) {
-    YUVBuffer.validateDimension(stride);
-    YUVBuffer.validateDimension(rows);
-    return {
-      bytes: new Uint8Array(stride * rows),
-      stride: stride
-    }
   },
 
   /**
@@ -461,7 +446,7 @@ module.exports = YUVBuffer;
 
 },{}],5:[function(require,module,exports){
 /*
-Copyright (c) 2014-2016 Brion Vibber <brion@pobox.com>
+Copyright (c) 2014-20124 Brooke Vibber <bvibber@pobox.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -577,7 +562,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 },{"./FrameSink.js":4,"./YCbCr.js":7}],6:[function(require,module,exports){
 /*
-Copyright (c) 2014-2016 Brion Vibber <brion@pobox.com>
+Copyright (c) 2014-2024 Brooke Vibber <bvibber@pobox.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -1104,7 +1089,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 },{"../build/shaders.js":1,"./FrameSink.js":4}],7:[function(require,module,exports){
 /*
-Copyright (c) 2014-2019 Brion Vibber <brion@pobox.com>
+Copyright (c) 2014-2024 Brooke Vibber <bvibber@pobox.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -1131,8 +1116,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	/**
 	 * Basic YCbCr->RGB conversion
 	 *
-	 * @author Brion Vibber <brion@pobox.com>
-	 * @copyright 2014-2019
+	 * @author Brooke Vibber <bvibber@pobox.com>
+	 * @copyright 2014-2024
 	 * @license MIT-style
 	 *
 	 * @param {YUVFrame} buffer - input frame buffer
@@ -1245,7 +1230,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 },{"./depower.js":8}],8:[function(require,module,exports){
 /*
-Copyright (c) 2014-2016 Brion Vibber <brion@pobox.com>
+Copyright (c) 2014-2024 Brooke Vibber <bvibber@pobox.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -1271,8 +1256,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    * Convert a ratio into a bit-shift count; for instance a ratio of 2
    * becomes a bit-shift of 1, while a ratio of 1 is a bit-shift of 0.
    *
-   * @author Brion Vibber <brion@pobox.com>
-   * @copyright 2016
+   * @author Brooke Vibber <bvibber@pobox.com>
+   * @copyright 2016-2024
    * @license MIT-style
    *
    * @param {number} ratio - the integer ratio to convert.
@@ -1297,7 +1282,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 },{}],9:[function(require,module,exports){
 /*
-Copyright (c) 2014-2016 Brion Vibber <brion@pobox.com>
+Copyright (c) 2014-2024 Brooke Vibber <bvibber@pobox.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2019 Brion Vibber <brion@pobox.com>
+Copyright (c) 2014-2024 Brooke Vibber <bvibber@pobox.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -26,8 +26,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	/**
 	 * Basic YCbCr->RGB conversion
 	 *
-	 * @author Brion Vibber <brion@pobox.com>
-	 * @copyright 2014-2019
+	 * @author Brooke Vibber <bvibber@pobox.com>
+	 * @copyright 2014-2024
 	 * @license MIT-style
 	 *
 	 * @param {YUVFrame} buffer - input frame buffer
